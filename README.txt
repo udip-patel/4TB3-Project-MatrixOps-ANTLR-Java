@@ -6,6 +6,7 @@ For Class: CS4TB3 (Taught By Prof. Eden Burton)
 Functionality:
 The system expects an input text file which contains matrix definitions and operations that can be interpreted as sentences of a specific context-free language (detailed below).
 The system will then execute the instructions given on the specific matrices and store the results as directed.
+Matrices can contain integers or decimals (but a leading number must be included ex ".4" will not be recognized by the system)
 
 
 //name of language is MAT (matrix-arithmetic-terminology)

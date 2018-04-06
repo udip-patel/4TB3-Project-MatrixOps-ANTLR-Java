@@ -64,36 +64,56 @@ program:
     */
 
 
-
-
-ws: NEWLINE* SPACES*;//white space
-
-
 /*
 'matrix' <nameOfMatrix> '(' <number of columns in matrix> ')'
         '{' ('{' csvLine '}')+ '}'';'
 */
 matrixDeclaration:
-    ws MATRIX ws IDENTIFIER ws OPENBRACKET ws INTEGER ws
+    MATRIX IDENTIFIER OPENBRACKET INTEGER
         {
             System.out.println("add new symbol " + $IDENTIFIER.text + " to ST, and set the currentMatrix to the same string");
             System.out.println("Create new java 2D array with " + $INTEGER.text + " length. The length of each vector in the matrix is checked after processing a csvLine");
         }
     CLOSEBRACKET
-    ws OPENBRACE
-        (ws OPENBRACE ws csvLine ws CLOSEBRACE ws)+
-    CLOSEBRACE ws BREAK ws;
+    OPENBRACE
+        (OPENBRACE
+            csvLine
+            {
+                System.out.println($csvLine.rowData);
+            }
+        CLOSEBRACE )+
+    CLOSEBRACE BREAK ;
 
-csvLine:
-    number (ws COMMA ws number)*;
+csvLine
+returns [List<Double> rowData]
+:
+    number
+        {
+            $rowData = new ArrayList<Double>();
+            $rowData.add($number.value);
+        }
+    (COMMA number
+        {
+            $rowData.add($number.value);
+        }
+    )*;
 
-number:
-    (MINUS)?(INTEGER|FLOAT);
+number
+returns [Double value]
+:
+    (isMinus=MINUS)?
+    (INTEGER
+    {
+      $value = ($isMinus != null ? -1 : 1) * Double.parseDouble($INTEGER.text);
+    }
+    |FLOAT
+    {
+      $value = ($isMinus != null ? -1 : 1) * Double.parseDouble($FLOAT.text);
+    }
+    );
 
 
 /* LEXER */
-SPACES:     [ \t]+;
-NEWLINE:    ('\r'? '\n')+;
 
 
 
@@ -111,5 +131,5 @@ CLOSEBRACE:     '}';
 COMMA:          ',';
 BREAK:           ';';
 
-
+WS : [ \t\n\r]+ -> skip;
 ANYTHING: .;
