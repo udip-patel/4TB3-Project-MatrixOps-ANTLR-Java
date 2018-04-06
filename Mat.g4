@@ -2,12 +2,14 @@ grammar Mat;
 
 @header{
     package project.prototype.parser;
+    import project.prototype.MatSymbolTable;
     import java.util.*;
 }
 
 
 @members{
-
+    public MatSymbolTable symbolTable = new MatSymbolTable();
+    public boolean flag = false;// flag an error if one exists so it can be seen by the whole parser
 }
 
 /* PARSER
@@ -57,7 +59,11 @@ grammar Mat;
 */
 
 program:
-    matrixDeclaration* EOF;
+    matrixDeclaration* EOF
+    {
+        symbolTable.printST();
+    }
+    ;
     /* incomplete for now...
     operationStatement*
     outputStatement+
@@ -65,28 +71,42 @@ program:
 
 
 /*
-'matrix' <nameOfMatrix> '(' <number of columns in matrix> ')'
+'matrix' <nameOfMatrix> '(' <number of rows in matrix> ')'
         '{' ('{' csvLine '}')+ '}'';'
 */
 matrixDeclaration:
     MATRIX IDENTIFIER OPENBRACKET INTEGER
         {
-            System.out.println("add new symbol " + $IDENTIFIER.text + " to ST, and set the currentMatrix to the same string");
-            System.out.println("Create new java 2D array with " + $INTEGER.text + " length. The length of each vector in the matrix is checked after processing a csvLine");
+            //add matrix to symbol table as an empty matrix
+            if(!symbolTable.addItem($IDENTIFIER.text)){
+                System.out.println("Error! Cannot re-use the same names for multiple matrices (error with name: " + $IDENTIFIER.text + ")");
+                flag = true;//set error flag if cannot be added
+            }
+
         }
     CLOSEBRACKET
     OPENBRACE
         (OPENBRACE
             csvLine
             {
-                System.out.println($csvLine.rowData);
+                if(!flag){
+                    if($csvLine.rowData.size() == Integer.parseInt($INTEGER.text)){
+                        symbolTable.addRowToMatrix($IDENTIFIER.text, $csvLine.rowData);
+                    }
+                    else{
+                        System.out.println("Error! All rows in matrix " + $IDENTIFIER.text + " must contain " + $INTEGER.text + " elements (found:" + $csvLine.rowData.size() + " )");
+                        flag = true;
+                    }
+                }
             }
         CLOSEBRACE )+
-    CLOSEBRACE BREAK ;
+    CLOSEBRACE
+    BREAK {
+        flag = false;//reset error flag after statement is fully read
+    };
 
 csvLine
-returns [List<Double> rowData]
-:
+returns [List<Double> rowData]:
     number
         {
             $rowData = new ArrayList<Double>();
@@ -99,8 +119,7 @@ returns [List<Double> rowData]
     )*;
 
 number
-returns [Double value]
-:
+returns [Double value]:
     (isMinus=MINUS)?
     (INTEGER
     {
