@@ -11,8 +11,9 @@ The system will then execute the instructions given on the specific matrices and
 //name of language is MAT (matrix-arithmetic-terminology)
 Formal Definition of Context-free Language:
 
-    program             :=  programBlock* EOF
-    programBlock        :=  matrixDeclaration | operationStatement | outputStatement
+    program             :=  matrixDeclaration+
+                            operationStatement*
+                            outputStatement+ EOF
 
     matrixDeclaration   :=  MATRIX IDENTIFIER OPENBRACKET INTEGER CLOSEBRACKET
                             OPENBRACE
