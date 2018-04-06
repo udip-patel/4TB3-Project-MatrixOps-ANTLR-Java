@@ -1,0 +1,16 @@
+$a {
+    {1, 0, 0}
+    {0, 1, 0}
+    {0, 0, 1}
+};
+
+$b {
+    {3, -2, 1}
+    {4, 1, 0}
+    {7, -4, 5}
+};
+
+$c = scalarMultiply(crossProduct($a, $b), 5);
+
+export a, b separately;
+export c >>> result;
