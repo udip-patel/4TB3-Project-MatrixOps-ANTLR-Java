@@ -4,15 +4,18 @@ For Class: CS4TB3 (Taught By Prof. Eden Burton)
 
 
 Functionality:
-Given an input text file which contains matrix definitions and operations that can be interpreted as sentences of the context-free language, the system will execute the instructions given on the specific matrices and store the results in one or more output files (again, based on the instructions given).
+The system expects an input text file which contains matrix definitions and operations that can be interpreted as sentences of a specific context-free language (detailed below).
+The system will then execute the instructions given on the specific matrices and store the results as directed.
 
+
+//name of language is MAT (matrix-arithmetic-terminology)
 Formal Definition of Context-free Language:
-//will be called MAT (matrix-arithmetic-terminology) for this project
 
     program             :=  programBlock* EOF
     programBlock        :=  matrixDeclaration | operationStatement | outputStatement
 
-    matrixDeclaration   :=  MATRIX IDENTIFIER OPENBRACE
+    matrixDeclaration   :=  MATRIX IDENTIFIER OPENBRACKET INTEGER CLOSEBRACKET
+                            OPENBRACE
                                 (OPENBRACE csvLine CLOSEBRACE)+
                             CLOSEBRACE BREAK
     csvLine             :=  number (COMMA number)*
