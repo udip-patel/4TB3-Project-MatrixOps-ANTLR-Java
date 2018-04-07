@@ -7,7 +7,7 @@ public class MatExpressionObject {
     public boolean type;
     public Double scalarValue;
     //uninitialized array, best to leave uninit. until calculations are needed
-    public List<List<Double>> matrix;
+    public ArrayList<List<Double>> matrix;
 
 
     //base constructor --> set up an expression that returns a matrix
@@ -20,10 +20,10 @@ public class MatExpressionObject {
         this.scalarValue = scalarValue;
     }
 
-    //constructor used for loading/copying a matrix from the symbol table
-    public MatExpressionObject(ArrayList<List<Double>> stEntry){
+    //constructor used to load/copy a representation of a matrix
+    public MatExpressionObject(ArrayList<List<Double>> matrix){
         this.type = true;
-        this.matrix = new ArrayList<List<Double>>(stEntry);
+        this.matrix = new ArrayList<List<Double>>(matrix);
     }
 
     //WILL NEED a load function to load a given ArrayList into 'matrix'

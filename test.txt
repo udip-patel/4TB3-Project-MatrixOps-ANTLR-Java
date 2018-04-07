@@ -11,4 +11,5 @@ matrix a (3){
     {0, 0, 1}
 };
 
-a = dotproduct((crossproduct(a, b)), crossproduct(b, a));
+a = copy(b);
+b = transpose(b);

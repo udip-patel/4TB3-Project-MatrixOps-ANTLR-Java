@@ -4,12 +4,15 @@ grammar Mat;
     package project.prototype.parser;
     import project.prototype.MatSymbolTable;
     import project.prototype.MatExpressionObject;
+    import project.prototype.MatEvaluator;
     import java.util.*;
 }
 
 
 @members{
     public MatSymbolTable symbolTable = new MatSymbolTable();
+    //static library class with all math/algorithm based functions
+    public MatEvaluator eval;
     public boolean flag = false;// error flag for reference
 
 
@@ -46,7 +49,7 @@ program:
     operationStatement*
     EOF
     {
-        symbolTable.printST();
+
     }
     ;
     /* incomplete for now...
@@ -129,6 +132,7 @@ operationStatement:
         if(!flag){
         //if expression.type is a scalar, will need to add to scalar symbol table, else save the contents of expression.result in the ST with a new key or at a key that already exists
 
+        //make sure IDENTIFIER, if it is in either ST or ScalarST matches the expression type, if not, use the moveKey... functions to re-orient the identifier to the appropriate symbol table
 
 
         }
@@ -139,7 +143,7 @@ operationStatement:
     }
 ;
 
-/*3 categories of expressions - separated for code readability.
+/*3 categories of expressions - separated based on types of accepted params
 ALL MUST return either a matrix or num*/
 expression
 /*[returns MatExpressionObject result] */:
@@ -164,8 +168,33 @@ operationOnTwoMats
 
 //only one factor needed to perform operation
 operationOnOneMat
-/*[returns MatExpressionObject result] */:
-    (COPY|TRANSPOSE|DETERMINANT|INVERSE) OPENBRACKET factor CLOSEBRACKET;
+returns [MatExpressionObject result]:
+    (isCP=COPY|isTP=TRANSPOSE|isDT=DETERMINANT|isIN=INVERSE)
+    OPENBRACKET factor CLOSEBRACKET
+    {
+        if(flag){
+            $result = new MatExpressionObject();//return empty obj
+        }
+        else{
+            //copy function works for both scalar and matrices
+            if($isCP != null) $result = eval.copyMat($factor.result);
+            //every other function needs a matrix, so separated from copy
+            else{
+                //if factor is not a matrix, throw error stmt
+                if(!$factor.result.type){
+                    flag = true;
+                    printError("Cannot use the transpose/determinant/inverse functions on a Scalar number");
+                    $result = new MatExpressionObject();//return empty obj
+                }
+                else{
+                    if($isTP != null) $result = eval.transpose($factor.result);
+                    if($isDT != null) $result= eval.determinant($factor.result);
+                    if($isIN != null) $result = eval.invertMat($factor.result);
+                }
+            }
+        }
+    }
+;
 
 factor
 returns [MatExpressionObject result]:
@@ -219,7 +248,7 @@ returns [MatExpressionObject result]:
                 }
                 //if no flags, evaluate the nested expression
                 else{
-                    // set the value of expression to be the result of this factor
+                    //TODOSTILL... set the value of expression to be the result of this factor
                     System.out.println("valid recursion");
                     $result = new MatExpressionObject();
                 }
@@ -237,7 +266,7 @@ MULT:           'mult'|'Mult';
 DIVIDE:         'divide'|'Divide';
 DOTPRODUCT:     'dotproduct'|'dotProduct';
 CROSSPRODUCT:   'crossproduct'|'crossProduct';
-COPY:           'copymat'|'copyMat';
+COPY:           'copy';
 TRANSPOSE:      'transpose';
 DETERMINANT:    'getdeterminant'|'getDeterminant';
 INVERSE:        'inverse';

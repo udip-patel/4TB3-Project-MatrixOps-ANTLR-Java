@@ -57,8 +57,21 @@ public class MatSymbolTable {
     }
 
 
+    //functions used when variable types are overwritten by calculations
+    // This ensures that a symbol table transition from Scalar to matrix and vice-versa
+    public void moveSTKeyToScalarST(String symbol, Double newVal){
+        ST.remove(symbol);
+        ScalarST.put(symbol, newVal);
+    }
 
-    //print the symbol table (mostly for testing)
+    public void moveScalarSTKeyToST(String symbol, ArrayList<List<Double>> newVal){
+        ScalarST.remove(symbol);
+        ST.put(symbol, newVal);
+    }
+
+
+
+    //print the symbol table (mostly for testing - to be deleted)
     public void printST(){
         Iterator it = ST.entrySet().iterator();
         while(it.hasNext()){
