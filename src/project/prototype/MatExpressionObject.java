@@ -3,9 +3,11 @@ package project.prototype;
 import java.util.*;
 
 public class MatExpressionObject {
-    public boolean type;//TYPE refers to whether this object contains a matrix (1) or a scalar value (0)
-    public int scalarValue;
-    public List<List<Double>> matrix;//an uninitialiazed reference with a type that is compatible with how the system represents a matrix
+    //TYPE refers to whether this expr is a matrix (1) or a scalar value (0)
+    public boolean type;
+    public Double scalarValue;
+    //uninitialized array, best to leave uninit. until calculations are needed
+    public List<List<Double>> matrix;
 
 
     //base constructor --> set up an expression that returns a matrix
@@ -13,8 +15,9 @@ public class MatExpressionObject {
         this.type = true;
     }
     //constructor used for setting up an expr that returns a scalar value
-    public MatExpressionObject(boolean type){
-        this.type = type;
+    public MatExpressionObject(Double scalarValue){
+        this.type = false;
+        this.scalarValue = scalarValue;
     }
 
     //WILL NEED a load function to load a given ArrayList into 'matrix'

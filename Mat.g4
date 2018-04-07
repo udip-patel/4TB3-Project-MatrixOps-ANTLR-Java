@@ -60,8 +60,8 @@ grammar Mat;
 */
 
 program:
-    matrixDeclaration+
-    operationStatement+
+    matrixDeclaration*
+    operationStatement*
     EOF
     {
         symbolTable.printST();
@@ -137,7 +137,13 @@ returns [Double value]:
 
 /*almost like an assignment statement in programming languages */
 operationStatement:
-    IDENTIFIER EQUALS expression BREAK;
+    IDENTIFIER EQUALS expression BREAK
+    {
+        //if expression.type is a scalar, will need to add to scalar symbol table
+
+        flag = false;//reset error flag at the end of the statement
+    }
+;
 
 //expressions are divided into 3 categories. MUST return either a matrix or num
 expression
@@ -169,10 +175,34 @@ operationOnOneMat
 factor
 /*[returns MatExpressionObject result] */:
         number
-    |   IDENTIFIER
-    |   (OPENBRACKET)? expression (CLOSEBRACKET)?
         {
-            //FIRST thing to add: check if (OP && CLOSE) are the same value, if not error ( extra openbracket or missing closbracket )
+            //initialize result as a scalar MatExpressionObject with the value
+        }
+    |   IDENTIFIER
+        {
+            //initalize result as a matrix (IN THE FUTURE: or a scalar, a symbol table of scalar values will also be needed) based on the identifier in ST, and load the corresponding arrayLst into result.matrix (OR IN THE FUTURE: result.scalarValue)
+        }
+    |   (isOpenBracket=OPENBRACKET)? expression (isCloseBracket=CLOSEBRACKET)?
+        {
+            //check if brackets are valid, if no flags, evaluate the expression
+            if($isOpenBracket != null){
+                if($isCloseBracket == null){
+                    flag = true;
+                }
+            }
+            if($isCloseBracket != null){
+                if($isOpenBracket == null){
+                    flag = true;
+                }
+            }
+            if(flag){
+                System.out.println("Error! Odd number of Brackets in expression. Missing a ( or ) character");
+                flag = false;//reset flag
+            }
+            else{
+                // set the value of expression to be the result of this factor
+                System.out.println("valid recursion");
+            }
         }
     ;
 
@@ -183,11 +213,11 @@ ADD:            'add'|'Add';
 SUBTRACT:       'subtract'|'Subtract';
 MULT:           'mult'|'Mult';
 DIVIDE:         'divide'|'Divide';
-DOTPRODUCT:     'dotproduct|dotProduct';
-CROSSPRODUCT:   'crossproduct|crossProduct';
-COPY:           'copymat|copyMat';
+DOTPRODUCT:     'dotproduct'|'dotProduct';
+CROSSPRODUCT:   'crossproduct'|'crossProduct';
+COPY:           'copymat'|'copyMat';
 TRANSPOSE:      'transpose';
-DETERMINANT:    'getdeterminant|getDeterminant';
+DETERMINANT:    'getdeterminant'|'getDeterminant';
 INVERSE:        'inverse';
 /*all keywords go before IDENTIFIER to ensure they cannot be used as such */
 IDENTIFIER:     [A-Za-z_]+;
