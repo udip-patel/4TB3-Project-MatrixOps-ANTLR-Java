@@ -2,7 +2,7 @@ package project.prototype;
 
 import java.util.*;
 
-public class MatSymbolTable{
+public class MatSymbolTable {
 
     public HashMap<String, ArrayList<List<Double>>> ST;
 
