@@ -10,34 +10,16 @@ grammar Mat;
 
 @members{
     public MatSymbolTable symbolTable = new MatSymbolTable();
-    public boolean flag = false;// flag an error if one exists so it can be seen by the whole parser
+    public boolean flag = false;// error flag for reference
+
+
+    public static void printError(String err){
+        System.out.println("Error! " + err);
+    }
 }
 
-/* PARSER
+/* PARSER TODOSTILL
 
-
-    csvLine             :=  number (COMMA number)*
-    number              := (MINUS)? (INTEGER | FLOAT)
-
-    operationStatement:
-      incomplete for now, but something like IDENTIFER EQUALS functionStatement
-      and functionStatement can be one of these:
-        {between 2 matrices}
-        dot-product
-        cross-product
-        add
-        subtract
-
-        {for a single matrix and a scalar number (positive/negative)}
-        scalar multiplication
-        elementWise Addition
-        elementWise Subtraction
-
-        {for a single matrix}
-        isSquare
-        transpose
-        inverse
-        determinant
 
     outputStatment      := EXPORT IDENTIFIER (COMMA IDENTIFER)*
                             ( SEPARATELY | AS IDENTIFIER )
@@ -80,22 +62,23 @@ matrixDeclaration:
     MATRIX IDENTIFIER OPENBRACKET INTEGER CLOSEBRACKET OPENBRACE
         {
             //add matrix to symbol table as an empty matrix
-            if(!symbolTable.addItem($IDENTIFIER.text)){
-                System.out.println("Error! Cannot re-use the same names for multiple matrices (error with name: " + $IDENTIFIER.text + ")");
-                flag = true;//set error flag if cannot be added
+            if(!symbolTable.addMatrixItem($IDENTIFIER.text)){
+                //set error flag if cannot be added, then print error
+                flag = true;
+                printError("Cannot re-use the same names for multiple matrices (error with name: < " + $IDENTIFIER.text + " >)");
             }
-
         }
         //for each csvLine, make sure # of rows is consistent and save the data
         (OPENBRACE
             csvLine
             {
+                //only continue saving if no errors have been seen
                 if(!flag){
                     if($csvLine.rowData.size() == Integer.parseInt($INTEGER.text)){
                         symbolTable.addRowToMatrix($IDENTIFIER.text, $csvLine.rowData);
                     }
                     else{
-                        System.out.println("Error! All rows in matrix " + $IDENTIFIER.text + " must contain " + $INTEGER.text + " elements (found:" + $csvLine.rowData.size() + " )");
+                        printError("All rows in matrix " + $IDENTIFIER.text + " must contain < " + $INTEGER.text + " > elements (found:" + $csvLine.rowData.size() + " elements)");
                         flag = true;
                     }
                 }
@@ -103,6 +86,10 @@ matrixDeclaration:
         CLOSEBRACE )+
     CLOSEBRACE
     BREAK {
+        if(flag){
+            System.out.println("Due to the error, The matrix < " + $IDENTIFIER.text + " > was not created successfully");
+            symbolTable.ST.remove($IDENTIFIER.text);// remove bad obj from ST
+        }
         flag = false;//reset error flag after statement is fully read
     };
 
@@ -120,7 +107,7 @@ returns [List<Double> rowData]:
         }
     )*;
 
-//all numbers treated as double-type to avoid confusion while doing calculations
+//all numbers treated as Double-type to avoid confusion while doing calculations
 number
 returns [Double value]:
     (isMinus=MINUS)?
@@ -135,17 +122,25 @@ returns [Double value]:
     );
 
 
-/*almost like an assignment statement in programming languages */
+/*like an assignment statement in most programming languages */
 operationStatement:
     IDENTIFIER EQUALS expression BREAK
     {
-        //if expression.type is a scalar, will need to add to scalar symbol table
+        if(!flag){
+        //if expression.type is a scalar, will need to add to scalar symbol table, else save the contents of expression.result in the ST with a new key or at a key that already exists
 
+
+
+        }
+        else{
+            System.out.println("Due to the error, the statement < " +  $IDENTIFIER.text + " = ... > was not executed");
+        }
         flag = false;//reset error flag at the end of the statement
     }
 ;
 
-//expressions are divided into 3 categories. MUST return either a matrix or num
+/*3 categories of expressions - separated for code readability.
+ALL MUST return either a matrix or num*/
 expression
 /*[returns MatExpressionObject result] */:
         elementWiseOperation
@@ -173,42 +168,69 @@ operationOnOneMat
     (COPY|TRANSPOSE|DETERMINANT|INVERSE) OPENBRACKET factor CLOSEBRACKET;
 
 factor
-/*[returns MatExpressionObject result] */:
+returns [MatExpressionObject result]:
         number
         {
-            //initialize result as a scalar MatExpressionObject with the value
+            $result = new MatExpressionObject($number.value);
         }
     |   IDENTIFIER
         {
-            //initalize result as a matrix (IN THE FUTURE: or a scalar, a symbol table of scalar values will also be needed) based on the identifier in ST, and load the corresponding arrayLst into result.matrix (OR IN THE FUTURE: result.scalarValue)
+            if(flag) $result = new MatExpressionObject();//return empty obj
+
+            //proceed if no errors exist in current statement so far
+            else{
+                //load a matrix from symbol table into result
+                if(symbolTable.ST.containsKey($IDENTIFIER.text)){
+                    $result = new MatExpressionObject(
+                        symbolTable.ST.get($IDENTIFIER.text)
+                    );
+                }
+                //if the identifier is a scalar that was defined by a previous operationStatement, load from the separate scalarST hashmap
+                else if(symbolTable.ScalarST.containsKey($IDENTIFIER.text)){
+                    $result = new MatExpressionObject(
+                        symbolTable.ScalarST.get($IDENTIFIER.text)
+                    );
+                }
+                //identifier not found
+                else{
+                    flag = true;
+                    printError("Identifier < "+ $IDENTIFIER.text + " > does not exist");
+                    $result = new MatExpressionObject();//return empty obj
+                }
+            }
         }
     |   (isOpenBracket=OPENBRACKET)? expression (isCloseBracket=CLOSEBRACKET)?
         {
-            //check if brackets are valid, if no flags, evaluate the expression
-            if($isOpenBracket != null){
-                if($isCloseBracket == null){
-                    flag = true;
+            if(!flag){
+                //check if brackets are valid, print error if so
+                if($isOpenBracket != null){
+                    if($isCloseBracket == null){
+                        flag = true;
+                    }
+                }
+                if($isCloseBracket != null){
+                    if($isOpenBracket == null){
+                        flag = true;
+                    }
+                }
+                if(flag){
+                    printError("Odd number of Brackets in expression. Missing a ( or ) character");
+                    $result = new MatExpressionObject();//return empty obj
+                }
+                //if no flags, evaluate the nested expression
+                else{
+                    // set the value of expression to be the result of this factor
+                    System.out.println("valid recursion");
+                    $result = new MatExpressionObject();
                 }
             }
-            if($isCloseBracket != null){
-                if($isOpenBracket == null){
-                    flag = true;
-                }
-            }
-            if(flag){
-                System.out.println("Error! Odd number of Brackets in expression. Missing a ( or ) character");
-                flag = false;//reset flag
-            }
-            else{
-                // set the value of expression to be the result of this factor
-                System.out.println("valid recursion");
-            }
+            else $result = new MatExpressionObject();//return empty obj
         }
     ;
 
 /* LEXER */
 MATRIX:         'matrix';
-ELEMENTWISE:    'elementWise';
+ELEMENTWISE:    'elementwise'|'elementWise';
 ADD:            'add'|'Add';
 SUBTRACT:       'subtract'|'Subtract';
 MULT:           'mult'|'Mult';

@@ -20,6 +20,12 @@ public class MatExpressionObject {
         this.scalarValue = scalarValue;
     }
 
+    //constructor used for loading/copying a matrix from the symbol table
+    public MatExpressionObject(ArrayList<List<Double>> stEntry){
+        this.type = true;
+        this.matrix = new ArrayList<List<Double>>(stEntry);
+    }
+
     //WILL NEED a load function to load a given ArrayList into 'matrix'
     // -> for when a symbol table entry needs to be loaded into an expression
 
