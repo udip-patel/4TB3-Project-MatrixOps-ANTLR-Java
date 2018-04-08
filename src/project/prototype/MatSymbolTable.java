@@ -105,4 +105,6 @@ public class MatSymbolTable {
             System.out.println("\nVariable Name: " + symbol.getKey() + " = " + symbol.getValue());
         }
     }
+
+    //convert the given list of symbols into string data 
 }

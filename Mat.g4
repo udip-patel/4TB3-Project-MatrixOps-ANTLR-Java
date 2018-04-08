@@ -2,9 +2,7 @@ grammar Mat;
 
 @header{
     package project.prototype.parser;
-    import project.prototype.MatSymbolTable;
-    import project.prototype.MatExpressionObject;
-    import project.prototype.MatEvaluator;
+    import project.prototype.*;
     import java.util.*;
 }
 
@@ -41,6 +39,7 @@ grammar Mat;
 
     //will store the symbol(s) to output for an outputStatement
     List<String> referencesToOutput = new ArrayList<String>();
+    public MatFileWriter fileWriter = new MatFileWriter();
 
     //simple helper func
     public static void printError(String err){
@@ -322,6 +321,7 @@ returns [MatExpressionObject result]:
                     $result = new MatExpressionObject();//return empty obj
                 }
                 else{
+                    //check to make sure that F1 isSQUARE
                     if(op=='T')$result = eval.transpose($factor.result.matrix);
                     if(op=='D')$result= eval.determinant($factor.result.matrix);
                     if(op=='I')$result = eval.invertMat($factor.result.matrix);
@@ -403,23 +403,39 @@ outputStatement:
             //SPECIAL CASE: print or export all variables created
             if(operationStack.charAt(0) == 'P'){
                 symbolTable.printST(); symbolTable.printScalarST();//prints all
+                operationStack = operationStack.substring(1);//remove op
             }
             else{
-                //get all keys from ST and ScalarST and send to outputHandler to export to file
+                //operation is EXPORT ALL objects
+                referencesToOutput.clear();
+                for(String symbol : symbolTable.ST.keySet()){
+                    referencesToOutput.add(symbol);
+                }
+                for(String symbol : symbolTable.ScalarST.keySet()){
+                    referencesToOutput.add(symbol);
+                }
+                //note: in this case, the op is still not over, it is said to be over when the file is exported successfully
             }
-            //op is done, remove from stack
-            operationStack = operationStack.substring(1);
         })?
     )
 
-    (TO IDENTIFIER{
+    (TO IDENTIFIER {
         //only works for export, not print. IDENTIFIER specifies a filename to save a CSV file under
         if(operationStack.length() > 0 && operationStack.charAt(0) == 'X'){
-            //call the outputHandler and send in each value from the ST/ScalarST
-            //remove first char from operationStack
+            for(String ref: referencesToOutput){
+                if(symbolTable.ST.containsKey(ref)){
+                    fileWriter.addMatrixToFile(ref, symbolTable.ST.get(ref));
+                }
+                if(symbolTable.ScalarST.containsKey(ref)){
+                    fileWriter.addScalarValueToFile(ref, symbolTable.ScalarST.get(ref));
+                }
+            }
+            //op is done, remove first char from operationStack
             operationStack = operationStack.substring(1);
+            //save the buffered content into a file with name $IDENTIFIER
+            fileWriter.saveCsvContent($IDENTIFIER.text);
+            fileWriter.clearExportData();//clear all data exported for this statement, a fresh buffer is needed for the next output statement (if it exists)
         }
-        //else ignore, print statement will execute as desired anyways
     })?
     BREAK
     {
@@ -427,12 +443,16 @@ outputStatement:
         //where a, b, c are identifiers that are in the symbol table
         if(operationStack.length() > 0 && operationStack.charAt(0) == 'P'){
             symbolTable.printSymbols(referencesToOutput);
+            operationStack = operationStack.substring(1);
         }
-        referencesToOutput.clear();// clear all references to output once stmt is done evaluating
+        if(fileWriter.csvContent.length() > 0){
+            //only way this happens is if op X is chosen, but no CSV file is saved (since fileWriter.csvContent has not been cleared)
+            System.out.println("Error. Missing filename in export statement. Could not save the file");
+        }
+
+        referencesToOutput.clear();// clear the list of refs for this stmt
     }
 ;
-
-
 
 
 
