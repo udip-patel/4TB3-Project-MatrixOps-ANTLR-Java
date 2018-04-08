@@ -14,7 +14,7 @@ grammar Mat;
     //static library class with all math/algorithm based functions
     public MatEvaluator eval;
     public boolean flag = false;// error flag for reference
-
+    public int numOpenBrackets = 0;// the number of open brackets in an equation, incremented when '(' is seen in an expression, decremented when ')' is recognized. if it is not 0 at the end of the expression, throw error
 
     public static void printError(String err){
         System.out.println("Error! " + err);
@@ -129,10 +129,17 @@ returns [Double value]:
 operationStatement:
     IDENTIFIER EQUALS expression BREAK
     {
-        if(!flag){
-        //if expression.type is a scalar, will need to add to scalar symbol table, else save the contents of expression.result in the ST with a new key or at a key that already exists
+        if(numOpenBrackets != 0){
+            flag = true;
+            printError("Odd Number of Brackets in Expression, Missing ( or )");
+        }
 
-        //make sure IDENTIFIER, if it is in either ST or ScalarST matches the expression type, if not, use the moveKey... functions to re-orient the identifier to the appropriate symbol table
+        //if no flags, save the value of the expression to IDENTIFIER
+        if(!flag){
+
+            //if expression.type is a scalar, will need to add to scalar symbol table, else save the contents of expression.result in the ST with a new key or at a key that already exists
+
+            //make sure IDENTIFIER, if it is in either ST or ScalarST matches the expression type, if not, use the moveKey... functions to re-orient the identifier to the appropriate symbol table
             System.out.println($expression.result.matrix);
 
         }
@@ -140,6 +147,7 @@ operationStatement:
             System.out.println("Due to the error, the statement < " +  $IDENTIFIER.text + " = ... > was not executed");
         }
         flag = false;//reset error flag at the end of the statement
+        numOpenBrackets = 0;// reset numOpenBrackets for next expresson
     }
 ;
 
@@ -156,7 +164,7 @@ returns [MatExpressionObject result]:
 the first factor must be a matrix and the second factor a scalar number */
 elementWiseOperation
 returns [MatExpressionObject result]:
-    ELEMENTWISE(isA=ADD|isS=SUBTRACT|isM=MULT|isD=DIVIDE) OPENBRACKET
+    (isA=ELEMADD|isS=ELEMSUB|isM=ELEMMULT|isD=ELEMDIV|isP=ELEMPOW) OPENBRACKET
         f1=factor {
             if(!$factor.result.type){//if 1st factor is a scalar, print error
                 flag = true;
@@ -175,11 +183,12 @@ returns [MatExpressionObject result]:
         if(flag) $result = new MatExpressionObject();//return empty obj
         else{
             ArrayList<List<Double>> F1 = $f1.result.matrix;
-            Double F2 = $f1.result.scalarValue;
+            Double F2 = $f2.result.scalarValue;
 
-            if($isA != null) $result = eval.elemWiseAdd(F1, F2);
-            if($isS != null) $result = eval.elemWiseSub(F1, F2);
-            if($isM != null) $result = eval.elemWiseMult(F1, F2);
+            if($isA != null) $result = eval.elemWiseOperation(F1, F2, '+');
+            if($isS != null) $result = eval.elemWiseOperation(F1, F2, '-');
+            if($isM != null) $result = eval.elemWiseOperation(F1, F2, '*');
+            if($isP != null) $result = eval.elemWiseOperation(F1, F2, '^');
             if($isD != null){
                 //guard against 'divide-by-0' issue
                 if(F2 == 0.0){
@@ -188,7 +197,7 @@ returns [MatExpressionObject result]:
                     $result = new MatExpressionObject();
                 }
                 else{
-                    $result = eval.elemWiseDivide(F1, F2);
+                    $result = eval.elemWiseOperation(F1, F2, '/');
                 }
             }
         }
@@ -198,7 +207,7 @@ returns [MatExpressionObject result]:
 //both factors in this type of operation must be matrices
 operationOnTwoMats
 returns [MatExpressionObject result]:
-    (isDP=DOTPRODUCT|isCP=CROSSPRODUCT|isAD=ADD|isST=SUBTRACT) OPENBRACKET
+    (isMT=MULTIPLY|isAD=ADD|isST=SUBTRACT) OPENBRACKET
         f1=factor {
             if(!$factor.result.type){
                 flag = true;
@@ -218,12 +227,16 @@ returns [MatExpressionObject result]:
         else{
             ArrayList<List<Double>> F1 = $f1.result.matrix;
             ArrayList<List<Double>> F2 = $f2.result.matrix;
-            //at this point, can be sure that F1 and F2 are not null
 
-            //perform dot or cross product
-            if($isDP != null || $isCP != null){
-                if($isDP != null) $result = eval.dotProduct(F1, F2);
-                if($isCP != null) $result = eval.crossProduct(F1, F2);
+            //perform matrix multiplication
+            if($isMT != null){
+                //ensure #columns in F1 = #rows in F2. if not, throw error
+                if(F1.size() != F2.get(0).size()){
+                    flag = true;
+                    printError("Cannot multiply matrices where the number of columns in the first matrix is not the same as the number of rows in the second matrix");
+                    $result = new MatExpressionObject();//return empty obj
+                }
+                else $result = eval.multiplyMatrices(F1, F2);
             }
             else{
                 //the addition and subtraction functions have a precondition
@@ -305,49 +318,31 @@ returns [MatExpressionObject result]:
                 }
             }
         }
-    |   (isOpenBracket=OPENBRACKET)? expression (isCloseBracket=CLOSEBRACKET)?
+    |   (OPENBRACKET { numOpenBrackets++; })?
+            expression
+        (CLOSEBRACKET { numOpenBrackets--; })?
         {
-            if(!flag){
-                //check if brackets are valid, print error if so
-                if($isOpenBracket != null){
-                    if($isCloseBracket == null){
-                        flag = true;
-                    }
-                }
-                if($isCloseBracket != null){
-                    if($isOpenBracket == null){
-                        flag = true;
-                    }
-                }
-                if(flag){
-                    printError("Odd number of Brackets in expression. Missing a ( or ) character");
-                    $result = new MatExpressionObject();//return empty obj
-                }
-                //if no flags, evaluate the nested expression
-                else{
-                    System.out.println("valid recursion");
-                    $result = $expression.result;
-                }
-            }
+            if(!flag) $result = $expression.result;
             else $result = new MatExpressionObject();//return empty obj
         }
     ;
 
 /* LEXER */
 MATRIX:         'matrix';
-ELEMENTWISE:    'elementwise'|'elementWise';
+ELEMADD:        'elemwiseadd'|'elemWiseAdd';
+ELEMSUB:        'elemwisesub'|'elemWiseSub';
+ELEMMULT:        'elemwisemult'|'elemWiseMult';
+ELEMDIV:        'elemwisediv'|'elemWiseDiv';
+ELEMPOW:        'elemwisepow'|'elemWisePow';
 ADD:            'add'|'Add';
-SUBTRACT:       'subtract'|'Subtract';
-MULT:           'mult'|'Mult';
-DIVIDE:         'divide'|'Divide';
-DOTPRODUCT:     'dotproduct'|'dotProduct';
-CROSSPRODUCT:   'crossproduct'|'crossProduct';
+SUBTRACT:       'sub'|'Sub';
+MULTIPLY:        'mult'|'Mult';
 COPY:           'copy';
 TRANSPOSE:      'transpose';
 DETERMINANT:    'getdeterminant'|'getDeterminant';
 INVERSE:        'inverse';
 /*all keywords go before IDENTIFIER to ensure they cannot be used as such */
-IDENTIFIER:     [A-Za-z_]+;
+IDENTIFIER:     [A-Za-z_]+[0-9]*;
 MINUS:          '-';
 INTEGER:        [0-9]+;
 FLOAT:          [0-9]+'.'[0-9]+;

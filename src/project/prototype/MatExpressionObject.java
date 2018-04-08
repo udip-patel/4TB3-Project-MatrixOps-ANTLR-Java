@@ -10,7 +10,7 @@ public class MatExpressionObject {
     public ArrayList<List<Double>> matrix;
 
 
-    //base constructor --> set up an expression that returns a matrix
+    //base constructor --> set up an expression of type matrix
     public MatExpressionObject(){
         this.type = true;
     }
@@ -25,8 +25,5 @@ public class MatExpressionObject {
         this.type = true;
         this.matrix = new ArrayList<List<Double>>(matrix);
     }
-
-    //WILL NEED a load function to load a given ArrayList into 'matrix'
-    // -> for when a symbol table entry needs to be loaded into an expression
 
 }

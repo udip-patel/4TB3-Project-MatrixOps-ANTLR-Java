@@ -1,6 +1,7 @@
 package project.prototype;
 
 import java.util.*;
+import java.lang.Math.*;
 
 public class MatEvaluator{
     public MatEvaluator(){
@@ -32,7 +33,6 @@ public class MatEvaluator{
             }
             resultMat.add(transposedRow);
         }
-        System.out.println(resultMat);
         return new MatExpressionObject(resultMat);
     }
 
@@ -49,30 +49,45 @@ public class MatEvaluator{
     }
 
 
-    public static MatExpressionObject dotProduct(ArrayList<List<Double>> f1, ArrayList<List<Double>> f2){
 
-        return new MatExpressionObject();
-    }
-
-    public static MatExpressionObject crossProduct(ArrayList<List<Double>> f1, ArrayList<List<Double>> f2){
-
-        return new MatExpressionObject();
-    }
-
-
-
-    //complete functions...
+    //functions for two matrices...
     //patern used for functions:
-    /*  given v1, v2
-        v0 := v1 OPERATION v2;
-        return v0
+    /*  given f1, f2
+        f0 := f1 OPERATION f2;
+        return f0
+
+        cannot use f1 to store intermediary results in this case
     */
+
+
+    //MATRIX MULTIPLICATION function
+    public static MatExpressionObject multiplyMatrices(ArrayList<List<Double>> f1, ArrayList<List<Double>> f2){
+
+        Double tmp = 0.0;//used to store intermediate results
+        ArrayList<List<Double>> f0 = new ArrayList<List<Double>>();
+        for(int i=0; i < f1.size(); i++){
+            List<Double> resultRow = new ArrayList<Double>();
+            for(int j = 0; j < f2.get(0).size(); j++){
+                //each cell in the resulting Matrix = dot product of a single row from F1 and a single column from F2
+                tmp = 0.0;
+                for(int k = 0; k < f1.get(0).size(); k++){
+                    tmp += f1.get(i).get(k) * f2.get(k).get(j);
+                }
+                resultRow.add(tmp);
+            }
+            f0.add(resultRow);
+        }
+        return new MatExpressionObject(f0);
+    }
+
+
+
     public static MatExpressionObject addMat(ArrayList<List<Double>> f1, ArrayList<List<Double>> f2){
         ArrayList<List<Double>> f0 = new ArrayList<List<Double>>();
-        for(int i = 0; i < f1.get(0).size(); i++){
+        for(int i = 0; i < f1.size(); i++){
 
             List<Double> rowOfSummedResults = new ArrayList<Double>();
-            for(int j = 0; j < f1.size(); j++){
+            for(int j = 0; j < f1.get(0).size(); j++){
                 rowOfSummedResults.add(f1.get(i).get(j) + f2.get(i).get(j));
             }
             f0.add(rowOfSummedResults);
@@ -82,9 +97,9 @@ public class MatEvaluator{
 
     public static MatExpressionObject subtractMat(ArrayList<List<Double>> f1, ArrayList<List<Double>> f2){
         ArrayList<List<Double>> f0 = new ArrayList<List<Double>>();
-        for(int i = 0; i < f1.get(0).size(); i++){
+        for(int i = 0; i < f1.size(); i++){
             List<Double> rowOfDifferences = new ArrayList<Double>();
-            for(int j = 0; j < f1.size(); j++){
+            for(int j = 0; j < f1.get(0).size(); j++){
                 rowOfDifferences.add(f1.get(i).get(j) - f2.get(i).get(j));
             }
             f0.add(rowOfDifferences);
@@ -94,21 +109,24 @@ public class MatEvaluator{
 
 
     /*element-wise add/subtract/mult/divide functions */
-    public static MatExpressionObject elemWiseAdd(ArrayList<List<Double>> f1, Double f2){
-
-        return new MatExpressionObject();
-    }
-
-    public static MatExpressionObject elemWiseSub(ArrayList<List<Double>> f1, Double f2){
-        return new MatExpressionObject();
-    }
-
-    public static MatExpressionObject elemWiseMult(ArrayList<List<Double>> f1, Double f2){
-        return new MatExpressionObject();
-    }
-
-    public static MatExpressionObject elemWiseDivide(ArrayList<List<Double>> f1, Double f2){
-        return new MatExpressionObject();
+    public static MatExpressionObject elemWiseOperation(ArrayList<List<Double>> f1, Double f2, char op){
+        ArrayList<List<Double>> f0 = new ArrayList<List<Double>>();
+        for(int i = 0; i < f1.size(); i++){
+            List<Double> newRow = new ArrayList<Double>();
+            for(int j = 0; j < f1.get(0).size(); j++){
+                //this switch statement may add to the performance cost, but adding 4 separate functions with almost the same code seemed like too much code repetition
+                switch(op){
+                    case '+':newRow.add(f1.get(i).get(j)+f2); break;
+                    case '-':newRow.add(f1.get(i).get(j)-f2); break;
+                    case '*':newRow.add(f1.get(i).get(j)*f2); break;
+                    case '/':newRow.add(f1.get(i).get(j)/f2); break;
+                    case '^':newRow.add(Math.pow(f1.get(i).get(j), f2)); break;
+                    default: break;
+                }
+            }
+            f0.add(newRow);
+        }
+        return new MatExpressionObject(f0);
     }
 
 

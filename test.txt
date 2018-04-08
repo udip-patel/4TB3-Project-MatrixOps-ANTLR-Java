@@ -17,4 +17,23 @@ matrix d (3){
     {5, 3.3, 1}
 };
 
-c=add(add(b, a), transpose(b));
+matrix t1 (3){
+    {1, 2, 3}
+    {4, 5, 6}
+};
+
+matrix t2 (2){
+    {7, 8}
+    {9, 10}
+    {11, 12}
+};
+
+matrix test(5){
+    {1, 2, 3, 4, 5}
+};
+
+matrix test4 (5){
+    {2, 3, 4, 5, 6}
+};
+
+c = elemWisePow(elemWiseAdd(a, 1), 2);
