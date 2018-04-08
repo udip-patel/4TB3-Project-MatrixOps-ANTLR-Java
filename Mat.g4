@@ -321,10 +321,20 @@ returns [MatExpressionObject result]:
                     $result = new MatExpressionObject();//return empty obj
                 }
                 else{
-                    //check to make sure that F1 isSQUARE
+                    //transpose
                     if(op=='T')$result = eval.transpose($factor.result.matrix);
-                    if(op=='D')$result= eval.determinant($factor.result.matrix);
-                    if(op=='I')$result = eval.invertMat($factor.result.matrix);
+                    else{
+                        //both determinant and inversion have a precondition. The factor must be a SQUARE MATRIX
+                        if($factor.result.matrix.size() != $factor.result.matrix.get(0).size()){
+                            flag = true;
+                            printError("Cannot use the transpose/determinant/inverse functions on a matrix that is NOT SQUARE");
+                            $result = new MatExpressionObject();
+                        }
+                        else{
+                            if(op=='D')$result= eval.determinant($factor.result.matrix);
+                            if(op=='I')$result = eval.invertMat($factor.result.matrix);
+                        }
+                    }
                 }
             }
         }
@@ -474,7 +484,7 @@ SUBTRACT:       'sub'|'Sub';
 MULTIPLY:        'mult'|'Mult';
 COPY:           'copy';
 TRANSPOSE:      'transpose';
-DETERMINANT:    'getdeterminant'|'getDeterminant';
+DETERMINANT:    'determinant'|'Determinant';
 INVERSE:        'inverse';
 PRINT:          'print'|'Print';
 EXPORT:         'export'|'export';

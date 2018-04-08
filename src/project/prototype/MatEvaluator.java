@@ -37,12 +37,53 @@ public class MatEvaluator{
     }
 
 
-    //incomplete for now...
+    //recursive determinant function
     public static MatExpressionObject determinant(ArrayList<List<Double>> matObj){
+        ArrayList<List<Double>> tmp;
+        Double result = 0.0;
 
-        return new MatExpressionObject();
+        if(matObj.size() == 1){
+            result = matObj.get(0).get(0);
+            return new MatExpressionObject(result);
+        }
+        if(matObj.size() == 2){
+            result = (matObj.get(0).get(0)*matObj.get(1).get(1)) - (matObj.get(0).get(1)*matObj.get(1).get(0));
+            return new MatExpressionObject(result);
+        }
+
+
+        //do the recursive calculation for calculating determinant
+        for(int i = 0; i < matObj.get(0).size(); i++){
+
+            tmp = new ArrayList<List<Double>>();
+            //initialize tmp to be a matrix with dimensions [matObj-1][matObj-1]
+            //values are all 0 initially --> might be major cause of performance issues for a deeply nested operation
+            for(int reducedCols = 0; reducedCols < matObj.size()-1; reducedCols++){
+                List<Double> row = new ArrayList<Double>();
+                for(int reducedRows = 0; reducedRows < matObj.size()-1; reducedRows++){
+                    row.add(0.0);
+                }
+                tmp.add(row);
+            }
+
+
+            for(int j = 1; j < matObj.size(); j++){
+                for(int k = 0; k < matObj.get(0).size(); k++){
+                    if(k < i){
+                        tmp.get(j-1).set(k, matObj.get(j).get(k));
+                    }
+                    else if(k > i){
+                        tmp.get(j-1).set(k-1, matObj.get(j).get(k));
+                    }
+                }
+            }
+            result += matObj.get(0).get(i)* Math.pow(-1, (double)i) * determinant(tmp).scalarValue;
+        }
+        return new MatExpressionObject(result);
     }
 
+
+    //incomplete func.. only one left
     public static MatExpressionObject invertMat(ArrayList<List<Double>> matObj){
 
         return new MatExpressionObject();
