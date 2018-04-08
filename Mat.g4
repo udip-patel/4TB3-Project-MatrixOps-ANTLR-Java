@@ -16,6 +16,27 @@ grammar Mat;
     public boolean flag = false;// error flag for reference
     public int numOpenBrackets = 0;// the number of open brackets in an equation, incremented when '(' is seen in an expression, decremented when ')' is recognized. if it is not 0 at the end of the expression, throw error
 
+
+    String operationStack;//stores the set of current operations to perform
+    /*
+        if a new op is recognized, its corresponding char is loaded at the front of the operationStack
+        once an op is tasked for completion, it is removed from the stack by using the String.substring method
+        Set of Characters Used To Represent Operations:
+        +       elemWiseAdd
+        -       elemWiseSub
+        *       elemWiseMult
+        /       elemWiseDiv
+        ^       elemWisePow
+        M       multiplyMatrices
+        C       copy matrix
+        A       add matrices
+        S       subtract matrices
+        T       transpose matrix
+        D       determinant
+        I       inverse
+    */
+
+    //simple helper func
     public static void printError(String err){
         System.out.println("Error! " + err);
     }
@@ -28,20 +49,6 @@ grammar Mat;
                             ( SEPARATELY | AS IDENTIFIER )
                            BREAK
 
-    MATRIX              := '$'
-    IDENTIFIER          := [A-Za-z_]+
-    MINUS               := '-'
-    INTEGER             := [0-9]+
-    FLOAT               := [0-9]+'.'[0-9]+
-    COMMA               := ','
-    OPENBRACKET         := '('
-    CLOSEBRACKET        := ')'
-    OPENBRACE           := '{'
-    CLOSEBRACE          := '}'
-    BREAK               := ';'
-    EXPORT              := 'export'|'EXPORT'
-    SEPARATELY          := 'separately'|'SEPARATELY'
-    AS                  := '>>>'
 */
 
 program:
@@ -164,8 +171,16 @@ returns [MatExpressionObject result]:
 the first factor must be a matrix and the second factor a scalar number */
 elementWiseOperation
 returns [MatExpressionObject result]:
-    (isA=ELEMADD|isS=ELEMSUB|isM=ELEMMULT|isD=ELEMDIV|isP=ELEMPOW) OPENBRACKET
+    //add the appropriate character to the OperationStack
+    (   ELEMADD { operationStack = "+" + operationStack; }
+    |   ELEMSUB { operationStack = "-" + operationStack; }
+    |   ELEMMULT { operationStack = "*" + operationStack;}
+    |   ELEMDIV { operationStack = "/" + operationStack; }
+    |   ELEMPOW { operationStack = "^" + operationStack;; }
+    )
+    OPENBRACKET
         f1=factor {
+            //SIMIPLE ERROR-CHECKS BEFORE MAIN CHUNK OF CODE
             if(!$factor.result.type){//if 1st factor is a scalar, print error
                 flag = true;
                 printError("First factor of ElementWiseAdd/Subtract/Mult/Divide must be a matrix, not a scalar");
@@ -185,12 +200,14 @@ returns [MatExpressionObject result]:
             ArrayList<List<Double>> F1 = $f1.result.matrix;
             Double F2 = $f2.result.scalarValue;
 
-            if($isA != null) $result = eval.elemWiseOperation(F1, F2, '+');
-            if($isS != null) $result = eval.elemWiseOperation(F1, F2, '-');
-            if($isM != null) $result = eval.elemWiseOperation(F1, F2, '*');
-            if($isP != null) $result = eval.elemWiseOperation(F1, F2, '^');
-            if($isD != null){
-                //guard against 'divide-by-0' issue
+            //get currentSymbol from OperationStack
+            char currentOpSymbol = operationStack.charAt(0);
+            operationStack = operationStack.substring(1);//remove from stack
+
+            System.out.println(currentOpSymbol);
+
+            //guard against 'divide-by-0' issue
+            if(currentOpSymbol == '/'){
                 if(F2 == 0.0){
                     flag = true;
                     printError("Cannot use ElementWiseDivide to divide by 0");
@@ -200,6 +217,9 @@ returns [MatExpressionObject result]:
                     $result = eval.elemWiseOperation(F1, F2, '/');
                 }
             }
+            else {
+                $result = eval.elemWiseOperation(F1, F2, currentOpSymbol);
+            }
         }
     }
     ;
@@ -207,8 +227,12 @@ returns [MatExpressionObject result]:
 //both factors in this type of operation must be matrices
 operationOnTwoMats
 returns [MatExpressionObject result]:
-    (isMT=MULTIPLY|isAD=ADD|isST=SUBTRACT) OPENBRACKET
+    (   MULTIPLY    { operationStack = "M" + operationStack; }
+    |   ADD         { operationStack = "A" + operationStack; }
+    |   SUBTRACT    { operationStack = "S" + operationStack; }
+    ) OPENBRACKET
         f1=factor {
+            //again, simple error checks
             if(!$factor.result.type){
                 flag = true;
                 printError("Cannot use dotproduct/crossproduct/add/subtract on a scalar number");
@@ -228,8 +252,12 @@ returns [MatExpressionObject result]:
             ArrayList<List<Double>> F1 = $f1.result.matrix;
             ArrayList<List<Double>> F2 = $f2.result.matrix;
 
-            //perform matrix multiplication
-            if($isMT != null){
+            char currentOp = operationStack.charAt(0);
+            operationStack = operationStack.substring(1);
+            System.out.println(currentOp);
+
+            if(currentOp == 'M'){
+                //multiply matrices F1 and F2, but before that..
                 //ensure #columns in F1 = #rows in F2. if not, throw error
                 if(F1.size() != F2.get(0).size()){
                     flag = true;
@@ -248,8 +276,8 @@ returns [MatExpressionObject result]:
                     $result = new MatExpressionObject();//return empty obj
                 }
                 else{
-                    if($isAD != null) $result = eval.addMat(F1, F2);
-                    if($isST != null) $result = eval.subtractMat(F1, F2);
+                    if(currentOp == 'A') $result = eval.addMat(F1, F2);
+                    if(currentOp == 'S') $result = eval.subtractMat(F1, F2);
                 }
             }
         }
@@ -259,15 +287,21 @@ returns [MatExpressionObject result]:
 //only one factor needed to perform operation
 operationOnOneMat
 returns [MatExpressionObject result]:
-    (isCY=COPY|isTP=TRANSPOSE|isDT=DETERMINANT|isIN=INVERSE)
-    OPENBRACKET factor CLOSEBRACKET
+    (   COPY        { operationStack = "C" + operationStack; }
+    |   TRANSPOSE   { operationStack = "T" + operationStack; }
+    |   DETERMINANT { operationStack = "D" + operationStack; }
+    |   INVERSE     { operationStack = "I" + operationStack; }
+    ) OPENBRACKET factor CLOSEBRACKET
     {
         if(flag){
             $result = new MatExpressionObject();//return empty obj
         }
         else{
+            char op = operationStack.charAt(0);
+            operationStack = operationStack.substring(1);
+
             //copy function works for both scalar and matrices
-            if($isCY != null) $result = eval.copyObject($factor.result);
+            if(op == 'C') $result = eval.copyObject($factor.result);
             //every other function needs a matrix, so separated from copy
             else{
                 //if factor is not a matrix, throw error stmt
@@ -277,9 +311,9 @@ returns [MatExpressionObject result]:
                     $result = new MatExpressionObject();//return empty obj
                 }
                 else{
-                    if($isTP != null) $result = eval.transpose($factor.result.matrix);
-                    if($isDT != null) $result= eval.determinant($factor.result.matrix);
-                    if($isIN != null) $result = eval.invertMat($factor.result.matrix);
+                    if(op=='T')$result = eval.transpose($factor.result.matrix);
+                    if(op=='D')$result= eval.determinant($factor.result.matrix);
+                    if(op=='I')$result = eval.invertMat($factor.result.matrix);
                 }
             }
         }
@@ -325,7 +359,16 @@ returns [MatExpressionObject result]:
             if(!flag) $result = $expression.result;
             else $result = new MatExpressionObject();//return empty obj
         }
-    ;
+;
+
+
+
+
+
+
+
+
+
 
 /* LEXER */
 MATRIX:         'matrix';
@@ -342,7 +385,7 @@ TRANSPOSE:      'transpose';
 DETERMINANT:    'getdeterminant'|'getDeterminant';
 INVERSE:        'inverse';
 /*all keywords go before IDENTIFIER to ensure they cannot be used as such */
-IDENTIFIER:     [A-Za-z_]+[0-9]*;
+IDENTIFIER:     [A-Za-z_]+[0-9]*;//numbers allowed in identifier, but 1 char req
 MINUS:          '-';
 INTEGER:        [0-9]+;
 FLOAT:          [0-9]+'.'[0-9]+;

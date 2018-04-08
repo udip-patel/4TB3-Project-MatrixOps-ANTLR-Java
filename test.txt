@@ -36,4 +36,4 @@ matrix test4 (5){
     {2, 3, 4, 5, 6}
 };
 
-c = elemWisePow(elemWiseAdd(a, 1), 2);
+a = transpose(transpose(copy(t1)));
