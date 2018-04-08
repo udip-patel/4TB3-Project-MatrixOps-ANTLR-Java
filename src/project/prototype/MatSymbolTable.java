@@ -12,9 +12,6 @@ public class MatSymbolTable {
         - does not need scope functions, all matrices are in a global scope
         - does not need a find function, since hashMap provides an optimized get function based on the string key (which will hold the symbol the user wanted to assign to the matrix)
     */
-
-
-
     public HashMap<String, ArrayList<List<Double>>> ST;
     public HashMap<String, Double> ScalarST;
 
@@ -71,13 +68,41 @@ public class MatSymbolTable {
 
 
 
-    //print the symbol table (mostly for testing - to be deleted)
+    //print a given set of elements from both symbol tables
+    public void printSymbols(List<String> symbols){
+        for(String symbol: symbols){
+            if(ScalarST.containsKey(symbol)){
+                System.out.println("\nVariable Name: " + symbol + " = " + ScalarST.get(symbol));
+            }
+            if(ST.containsKey(symbol)){
+                System.out.println("\nMatrix Name: " + symbol);
+                for(List<Double>row:ST.get(symbol)){
+                    System.out.println("\t\t" + row);
+                }
+            }
+        }
+    }
+
+
+
+
+    //print all elements in symbol table
     public void printST(){
-        Iterator it = ST.entrySet().iterator();
-        while(it.hasNext()){
-            Map.Entry matrix = (Map.Entry)it.next();
-            System.out.println(matrix.getKey());
-            System.out.println(matrix.getValue());
+        System.out.println("\nMatrices:");
+        System.out.println("---------------------------");
+        for(Map.Entry<String, ArrayList<List<Double>>> symbol: ST.entrySet()){
+            System.out.println("\nMatrix Name: " + symbol.getKey());
+            for(List<Double> row: symbol.getValue()){
+                System.out.println("\t\t" + row);
+            }
+        }
+    }
+
+    public void printScalarST(){
+        System.out.println("\nScalar Values:");
+        System.out.println("---------------------------");
+        for(Map.Entry<String, Double> symbol:ScalarST.entrySet()){
+            System.out.println("\nVariable Name: " + symbol.getKey() + " = " + symbol.getValue());
         }
     }
 }

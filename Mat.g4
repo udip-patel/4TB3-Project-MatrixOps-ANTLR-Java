@@ -34,7 +34,13 @@ grammar Mat;
         T       transpose matrix
         D       determinant
         I       inverse
+        P       print matrix(ces)
+        X       export matrix(ces)
     */
+
+
+    //will store the symbol(s) to output for an outputStatement
+    List<String> referencesToOutput = new ArrayList<String>();
 
     //simple helper func
     public static void printError(String err){
@@ -42,26 +48,15 @@ grammar Mat;
     }
 }
 
-/* PARSER TODOSTILL
-
-
-    outputStatment      := EXPORT IDENTIFIER (COMMA IDENTIFER)*
-                            ( SEPARATELY | AS IDENTIFIER )
-                           BREAK
-
-*/
-
 program:
     matrixDeclaration*
     operationStatement*
+    outputStatement*
     EOF
     {
 
     }
     ;
-    /* incomplete for now...
-    outputStatement+
-    */
 
 
 /*
@@ -167,7 +162,6 @@ operationStatement:
                     symbolTable.ST.put($IDENTIFIER.text, $expression.result.matrix);
                 }
             }
-            System.out.println($IDENTIFIER.text + "=" + $expression.result.matrix);
         }
         else{
             System.out.println("Due to the error, the statement < " +  $IDENTIFIER.text + " = ... > was not executed");
@@ -178,7 +172,7 @@ operationStatement:
 ;
 
 /*3 categories of expressions - separated based on types of accepted params
-ALL MUST return either a matrix or num*/
+ALL MUST return either a matrix or num, stored in custom object*/
 expression
 returns [MatExpressionObject result]:
         elementWiseOperation    { $result = $elementWiseOperation.result; }
@@ -252,13 +246,13 @@ returns [MatExpressionObject result]:
             //again, simple error checks
             if(!$factor.result.type){
                 flag = true;
-                printError("Cannot use dotproduct/crossproduct/add/subtract on a scalar number");
+                printError("Cannot use mult/add/subtract on a scalar number");
             }
         } COMMA f2=factor {
             if(!flag){
                 if(!$factor.result.type){
                     flag = true;
-                    printError("Cannot use dotproduct/crossproduct/add/subtract on a scalar number");
+                    printError("Cannot use mult/add/subtract on a scalar number");
                 }
             }
         }
@@ -269,9 +263,9 @@ returns [MatExpressionObject result]:
             ArrayList<List<Double>> F1 = $f1.result.matrix;
             ArrayList<List<Double>> F2 = $f2.result.matrix;
 
-            //schedule the first task on operationStack to be exec, remove that task from the stack as well
+            //schedule the first task on operationStack to be executed
             char currentOp = operationStack.charAt(0);
-            operationStack = operationStack.substring(1);
+            operationStack = operationStack.substring(1);//remove op from stack
 
             if(currentOp == 'M'){
                 //multiply matrices F1 and F2, but before that..
@@ -380,6 +374,63 @@ returns [MatExpressionObject result]:
 
 
 
+outputStatement:
+    (PRINT  { operationStack = "P" + operationStack; }
+    |EXPORT { operationStack = "X" + operationStack; }
+    )
+    //store the references to keep track of what to output
+    (IDENTIFIER
+        {
+            if(symbolTable.ST.containsKey($IDENTIFIER.text) || symbolTable.ScalarST.containsKey($IDENTIFIER.text)){
+                referencesToOutput.add($IDENTIFIER.text);
+            }
+            else{
+                printError("Cannot Output the variable < " + $IDENTIFIER.text + " > because it does not exist");//no error flags for an outputstmt
+            }
+        }
+        (COMMA IDENTIFIER
+            {
+                if(symbolTable.ST.containsKey($IDENTIFIER.text) || symbolTable.ScalarST.containsKey($IDENTIFIER.text)){
+                    referencesToOutput.add($IDENTIFIER.text);
+                }
+                else{
+                    printError("Cannot Output the variable < " + $IDENTIFIER.text + " > because it does not exist");
+                }
+            }
+        )*
+    |(ALL
+        {
+            //SPECIAL CASE: print or export all variables created
+            if(operationStack.charAt(0) == 'P'){
+                symbolTable.printST(); symbolTable.printScalarST();//prints all
+            }
+            else{
+                //get all keys from ST and ScalarST and send to outputHandler to export to file
+            }
+            //op is done, remove from stack
+            operationStack = operationStack.substring(1);
+        })?
+    )
+
+    (TO IDENTIFIER{
+        //only works for export, not print. IDENTIFIER specifies a filename to save a CSV file under
+        if(operationStack.length() > 0 && operationStack.charAt(0) == 'X'){
+            //call the outputHandler and send in each value from the ST/ScalarST
+            //remove first char from operationStack
+            operationStack = operationStack.substring(1);
+        }
+        //else ignore, print statement will execute as desired anyways
+    })?
+    BREAK
+    {
+        //this block of code handles a statement like "print a, b, c;"
+        //where a, b, c are identifiers that are in the symbol table
+        if(operationStack.length() > 0 && operationStack.charAt(0) == 'P'){
+            symbolTable.printSymbols(referencesToOutput);
+        }
+        referencesToOutput.clear();// clear all references to output once stmt is done evaluating
+    }
+;
 
 
 
@@ -401,6 +452,10 @@ COPY:           'copy';
 TRANSPOSE:      'transpose';
 DETERMINANT:    'getdeterminant'|'getDeterminant';
 INVERSE:        'inverse';
+PRINT:          'print'|'Print';
+EXPORT:         'export'|'export';
+ALL:            '*';
+TO:             '>>';
 /*all keywords go before IDENTIFIER to ensure they cannot be used as such */
 IDENTIFIER:     [A-Za-z_]+[0-9]*;//numbers allowed in identifier, but 1 char req
 MINUS:          '-';

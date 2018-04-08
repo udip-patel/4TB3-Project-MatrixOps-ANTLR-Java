@@ -37,5 +37,9 @@ matrix test4 (5){
 };
 
 test4 = copy(a);
-b = mult(b, test4);
+b = copy(5);
+a = elemWiseMult(a, b);
 test = elemWisePow(elemWiseAdd(mult(t1, t2), 0), 1);
+export a >> test;
+print a, b, test;
+print *;
