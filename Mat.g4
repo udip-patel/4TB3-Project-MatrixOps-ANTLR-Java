@@ -133,7 +133,7 @@ operationStatement:
         //if expression.type is a scalar, will need to add to scalar symbol table, else save the contents of expression.result in the ST with a new key or at a key that already exists
 
         //make sure IDENTIFIER, if it is in either ST or ScalarST matches the expression type, if not, use the moveKey... functions to re-orient the identifier to the appropriate symbol table
-
+            System.out.println($expression.result.matrix);
 
         }
         else{
@@ -146,30 +146,125 @@ operationStatement:
 /*3 categories of expressions - separated based on types of accepted params
 ALL MUST return either a matrix or num*/
 expression
-/*[returns MatExpressionObject result] */:
-        elementWiseOperation
-    |   operationOnTwoMats
-    |   operationOnOneMat;
+returns [MatExpressionObject result]:
+        elementWiseOperation    { $result = $elementWiseOperation.result; }
+    |   operationOnTwoMats      { $result = $operationOnTwoMats.result; }
+    |   operationOnOneMat       { $result = $operationOnOneMat.result; }
+;
 
 /* elementWise('add'|'subtract'|'mult'|'divide') '(' factor ',' factor ')'
 the first factor must be a matrix and the second factor a scalar number */
 elementWiseOperation
-/*[returns MatExpressionObject result] */:
-    ELEMENTWISE(ADD|SUBTRACT|MULT|DIVIDE) OPENBRACKET
-        factor COMMA factor
-    CLOSEBRACKET;
+returns [MatExpressionObject result]:
+    ELEMENTWISE(isA=ADD|isS=SUBTRACT|isM=MULT|isD=DIVIDE) OPENBRACKET
+        factor {
+            if(!$factor.result.type){//if 1st factor is a scalar, print error
+                flag = true;
+                printError("First factor of ElementWiseAdd/Subtract/Mult/Divide must be a matrix, not a scalar");
+            }
+            else{
+                symbolTable.ST.put("reg one", $factor.result.matrix);
+            }
+        } COMMA factor {
+            if(!flag){
+                if($factor.result.type){//if 2nd factor is a matrix, print error
+                    flag = true;
+                    printError("Second factor of ElementWiseAdd/Subtract/Mult/Divide must be a scalar, not a matrix");
+                }
+                else{
+                    //add 2nd factor to the scalarST hashmap under the key "reg two" (just for consistency)
+                    symbolTable.ScalarST.put("reg two", $factor.result.scalarValue);
+                }
+            }
+        }
+    CLOSEBRACKET
+    {
+        if(flag) $result = new MatExpressionObject();//return empty obj
+        else{
+            ArrayList<List<Double>> F1 = symbolTable.ST.get("reg one");
+            Double F2 = symbolTable.ScalarST.get("reg two");
+            if($isA != null) $result = eval.elemWiseAdd(F1, F2);
+            if($isS != null) $result = eval.elemWiseSub(F1, F2);
+            if($isM != null) $result = eval.elemWiseMult(F1, F2);
+            if($isD != null){
+                if(F2 == 0.0){
+                    flag = true;
+                    printError("Cannot use ElementWiseDivide to divide by 0");
+                    $result = new MatExpressionObject();
+                }
+                else{
+                    $result = eval.elemWiseDivide(F1, F2);
+                }
+            }
+            symbolTable.ST.remove("reg one");
+            symbolTable.ScalarST.remove("reg two");
+        }
+    }
+    ;
 
 //both factors in this type of operation must be matrices
 operationOnTwoMats
-/*[returns MatExpressionObject result] */:
-    (DOTPRODUCT|CROSSPRODUCT|ADD|SUBTRACT) OPENBRACKET
-        factor COMMA factor
-    CLOSEBRACKET;
+returns [MatExpressionObject result]:
+    (isDP=DOTPRODUCT|isCP=CROSSPRODUCT|isAD=ADD|isST=SUBTRACT) OPENBRACKET
+        factor {
+            if(!$factor.result.type){
+                flag = true;
+                printError("Cannot use dotproduct/crossproduct/add/subtract on a scalar number");
+            }
+            else {
+                //put factor in symbol table under a non-conflicting index
+                symbolTable.ST.put("reg one", new ArrayList<List<Double>>($factor.result.matrix));
+            }
+        } COMMA factor {
+            if(!flag){
+                if(!$factor.result.type){
+                    flag = true;
+                    printError("Cannot use dotproduct/crossproduct/add/subtract on a scalar number");
+                }
+                else{
+                    //put 2nd factor into ST under key "reg two"
+                    symbolTable.ST.put("reg two", new ArrayList<List<Double>>($factor.result.matrix));
+                }
+            }
+        }
+    CLOSEBRACKET
+    {
+        if(flag) $result = new MatExpressionObject();//return empty obj
+        else{
+            ArrayList<List<Double>> F1 = symbolTable.ST.get("reg one");
+            ArrayList<List<Double>> F2 = symbolTable.ST.get("reg two");
+            if(F1 == null || F2 == null){
+                symbolTable.printST();
+            }
+
+            if($isDP != null || $isCP != null){
+                if($isDP != null) $result = eval.dotProduct(F1, F2);
+                if($isCP != null) $result = eval.crossProduct(F1, F2);
+            }
+            else{
+                //the addition and subtraction functions have a precondition
+                //both F1 and F2 must be the same dimensions
+                if(F1.size() != F2.size() || F1.get(0).size() != F2.get(0).size()){
+                    //print error if preconditions are not met
+                    flag = true;
+                    printError("Cannot add/subtract matrices that have different dimensions");
+                    $result = new MatExpressionObject();//return empty obj
+                }
+                else{
+                    if($isAD != null) $result = eval.addMat(F1, F2);
+                    if($isST != null) $result = eval.subtractMat(F1, F2);
+                }
+            }
+            symbolTable.ST.remove("reg one");
+            symbolTable.ST.remove("reg two");
+        }
+    }
+;
 
 //only one factor needed to perform operation
 operationOnOneMat
 returns [MatExpressionObject result]:
-    (isCP=COPY|isTP=TRANSPOSE|isDT=DETERMINANT|isIN=INVERSE)
+    (isCY=COPY|isTP=TRANSPOSE|isDT=DETERMINANT|isIN=INVERSE)
     OPENBRACKET factor CLOSEBRACKET
     {
         if(flag){
@@ -177,7 +272,7 @@ returns [MatExpressionObject result]:
         }
         else{
             //copy function works for both scalar and matrices
-            if($isCP != null) $result = eval.copyMat($factor.result);
+            if($isCY != null) $result = eval.copyMat($factor.result);
             //every other function needs a matrix, so separated from copy
             else{
                 //if factor is not a matrix, throw error stmt
@@ -187,9 +282,9 @@ returns [MatExpressionObject result]:
                     $result = new MatExpressionObject();//return empty obj
                 }
                 else{
-                    if($isTP != null) $result = eval.transpose($factor.result);
-                    if($isDT != null) $result= eval.determinant($factor.result);
-                    if($isIN != null) $result = eval.invertMat($factor.result);
+                    if($isTP != null) $result = eval.transpose($factor.result.matrix);
+                    if($isDT != null) $result= eval.determinant($factor.result.matrix);
+                    if($isIN != null) $result = eval.invertMat($factor.result.matrix);
                 }
             }
         }
@@ -248,9 +343,8 @@ returns [MatExpressionObject result]:
                 }
                 //if no flags, evaluate the nested expression
                 else{
-                    //TODOSTILL... set the value of expression to be the result of this factor
                     System.out.println("valid recursion");
-                    $result = new MatExpressionObject();
+                    $result = $expression.result;
                 }
             }
             else $result = new MatExpressionObject();//return empty obj
