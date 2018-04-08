@@ -70,6 +70,7 @@ public class MatSymbolTable {
 
     //print a given set of elements from both symbol tables
     public void printSymbols(List<String> symbols){
+        System.out.println("\n*****Showing Specific Variables*****\n");
         for(String symbol: symbols){
             if(ScalarST.containsKey(symbol)){
                 System.out.println("\nVariable Name: " + symbol + " = " + ScalarST.get(symbol));
@@ -81,6 +82,7 @@ public class MatSymbolTable {
                 }
             }
         }
+        System.out.println("\n**********************************\n");
     }
 
 
@@ -106,5 +108,5 @@ public class MatSymbolTable {
         }
     }
 
-    //convert the given list of symbols into string data 
+    //convert the given list of symbols into string data
 }

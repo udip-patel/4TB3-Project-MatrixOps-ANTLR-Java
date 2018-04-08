@@ -402,8 +402,10 @@ outputStatement:
         {
             //SPECIAL CASE: print or export all variables created
             if(operationStack.charAt(0) == 'P'){
+                System.out.println("\n\n*****Showing All Variables*****\n");
                 symbolTable.printST(); symbolTable.printScalarST();//prints all
                 operationStack = operationStack.substring(1);//remove op
+                System.out.println("\n**********************************\n");
             }
             else{
                 //operation is EXPORT ALL objects
@@ -422,6 +424,7 @@ outputStatement:
     (TO IDENTIFIER {
         //only works for export, not print. IDENTIFIER specifies a filename to save a CSV file under
         if(operationStack.length() > 0 && operationStack.charAt(0) == 'X'){
+            System.out.println("\n\n*****Exported File*****");
             for(String ref: referencesToOutput){
                 if(symbolTable.ST.containsKey(ref)){
                     fileWriter.addMatrixToFile(ref, symbolTable.ST.get(ref));
@@ -435,6 +438,7 @@ outputStatement:
             //save the buffered content into a file with name $IDENTIFIER
             fileWriter.saveCsvContent($IDENTIFIER.text);
             fileWriter.clearExportData();//clear all data exported for this statement, a fresh buffer is needed for the next output statement (if it exists)
+            System.out.println("\n**********************************\n");
         }
     })?
     BREAK
