@@ -14,7 +14,7 @@ matrix a (3){
 matrix d (3){
     {1, 0, 2}
     {0, 1, 0}
-    {5, 0, 1}
+    {5, 3.3, 1}
 };
 
-c = add(b, add(d, a));
+c=add(add(b, a), transpose(b));

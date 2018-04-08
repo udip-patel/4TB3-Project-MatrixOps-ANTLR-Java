@@ -8,7 +8,7 @@ public class MatEvaluator{
     }
 
     //simiple copy method, uses constructors to return a new MatExpressionObject
-    public static MatExpressionObject copyMat(MatExpressionObject exprObj){
+    public static MatExpressionObject copyObject(MatExpressionObject exprObj){
         //if the object is a scalar value
         if(!exprObj.type){
             return new MatExpressionObject(exprObj.scalarValue);
@@ -62,37 +62,40 @@ public class MatEvaluator{
 
 
     //complete functions...
+    //patern used for functions:
+    /*  given v1, v2
+        v0 := v1 OPERATION v2;
+        return v0
+    */
     public static MatExpressionObject addMat(ArrayList<List<Double>> f1, ArrayList<List<Double>> f2){
-        ArrayList<List<Double>> resultMat = new ArrayList<List<Double>>();
-
+        ArrayList<List<Double>> f0 = new ArrayList<List<Double>>();
         for(int i = 0; i < f1.get(0).size(); i++){
-            List<Double> sumOfMatsRow = new ArrayList<Double>();
+
+            List<Double> rowOfSummedResults = new ArrayList<Double>();
             for(int j = 0; j < f1.size(); j++){
-                sumOfMatsRow.add(f1.get(i).get(j) + f2.get(i).get(j));
+                rowOfSummedResults.add(f1.get(i).get(j) + f2.get(i).get(j));
             }
-            resultMat.add(sumOfMatsRow);
+            f0.add(rowOfSummedResults);
         }
-        //System.out.println(resultMat);
-        return new MatExpressionObject(resultMat);
+        return new MatExpressionObject(f0);
     }
 
     public static MatExpressionObject subtractMat(ArrayList<List<Double>> f1, ArrayList<List<Double>> f2){
-        ArrayList<List<Double>> resultMat = new ArrayList<List<Double>>();
-
+        ArrayList<List<Double>> f0 = new ArrayList<List<Double>>();
         for(int i = 0; i < f1.get(0).size(); i++){
-            List<Double> differenceOfMatsRow = new ArrayList<Double>();
+            List<Double> rowOfDifferences = new ArrayList<Double>();
             for(int j = 0; j < f1.size(); j++){
-                differenceOfMatsRow.add(f1.get(i).get(j) - f2.get(i).get(j));
+                rowOfDifferences.add(f1.get(i).get(j) - f2.get(i).get(j));
             }
-            resultMat.add(differenceOfMatsRow);
+            f0.add(rowOfDifferences);
         }
-        //System.out.println(resultMat);
-        return new MatExpressionObject(resultMat);
+        return new MatExpressionObject(f0);
     }
 
 
     /*element-wise add/subtract/mult/divide functions */
     public static MatExpressionObject elemWiseAdd(ArrayList<List<Double>> f1, Double f2){
+
         return new MatExpressionObject();
     }
 
