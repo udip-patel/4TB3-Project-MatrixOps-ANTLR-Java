@@ -17,7 +17,7 @@ grammar Mat;
     public int numOpenBrackets = 0;// the number of open brackets in an equation, incremented when '(' is seen in an expression, decremented when ')' is recognized. if it is not 0 at the end of the expression, throw error
 
 
-    String operationStack;//stores the set of current operations to perform
+    String operationStack = "";//stores the set of current operations to perform
     /*
         if a new op is recognized, its corresponding char is loaded at the front of the operationStack
         once an op is tasked for completion, it is removed from the stack by using the String.substring method
@@ -143,12 +143,31 @@ operationStatement:
 
         //if no flags, save the value of the expression to IDENTIFIER
         if(!flag){
-
-            //if expression.type is a scalar, will need to add to scalar symbol table, else save the contents of expression.result in the ST with a new key or at a key that already exists
-
-            //make sure IDENTIFIER, if it is in either ST or ScalarST matches the expression type, if not, use the moveKey... functions to re-orient the identifier to the appropriate symbol table
-            System.out.println($expression.result.matrix);
-
+            //RESULT IS A SCALAR
+            if(!$expression.result.type){
+                //if reference used to previously store a matrix type
+                if(symbolTable.ST.containsKey($IDENTIFIER.text)){
+                    //remove the symbol from ST and put a new one in ScalarST
+                    symbolTable.moveSTKeyToScalarST($IDENTIFIER.text, $expression.result.scalarValue);
+                }
+                else{
+                    //update or insert the reference in the scalar symbol table
+                    symbolTable.ScalarST.put($IDENTIFIER.text, $expression.result.scalarValue);
+                }
+            }
+            //RESULT IS A MATRIX
+            else{
+                //if reference was used to store a scalar before
+                if(symbolTable.ScalarST.containsKey($IDENTIFIER.text)){
+                    //move the reference to the matrix symbol table
+                    symbolTable.moveScalarSTKeyToST($IDENTIFIER.text, $expression.result.matrix);
+                }
+                else{
+                    //update or insert the reference in the matrix symbol table
+                    symbolTable.ST.put($IDENTIFIER.text, $expression.result.matrix);
+                }
+            }
+            System.out.println($IDENTIFIER.text + "=" + $expression.result.matrix);
         }
         else{
             System.out.println("Due to the error, the statement < " +  $IDENTIFIER.text + " = ... > was not executed");
@@ -204,8 +223,6 @@ returns [MatExpressionObject result]:
             char currentOpSymbol = operationStack.charAt(0);
             operationStack = operationStack.substring(1);//remove from stack
 
-            System.out.println(currentOpSymbol);
-
             //guard against 'divide-by-0' issue
             if(currentOpSymbol == '/'){
                 if(F2 == 0.0){
@@ -252,9 +269,9 @@ returns [MatExpressionObject result]:
             ArrayList<List<Double>> F1 = $f1.result.matrix;
             ArrayList<List<Double>> F2 = $f2.result.matrix;
 
+            //schedule the first task on operationStack to be exec, remove that task from the stack as well
             char currentOp = operationStack.charAt(0);
             operationStack = operationStack.substring(1);
-            System.out.println(currentOp);
 
             if(currentOp == 'M'){
                 //multiply matrices F1 and F2, but before that..
