@@ -59,7 +59,7 @@ program:
 
 
 /*
-'matrix' <nameOfMatrix> '(' <number of rows in matrix> ')'
+'matrix' <nameOfMatrix> '(' <number of columns in matrix> ')'
         '{' ('{' csvLine '}')+ '}'';'
 */
 matrixDeclaration:

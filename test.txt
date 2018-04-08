@@ -44,5 +44,6 @@ matrix v1 (4){
     {9, 2, 3, 1}
 };
 
-a = determinant(v1);
-print a;
+a = mult(inverse(inverse(elemWiseMult(a, 3))), b);
+g = inverse(transpose(transpose(v1)));
+print a, g;
