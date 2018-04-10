@@ -59,11 +59,11 @@ program:
 
 
 /*
-'matrix' <nameOfMatrix> '(' <number of columns in matrix> ')'
+'matrix' <nameOfMatrix>
         '{' ('{' csvLine '}')+ '}'';'
 */
 matrixDeclaration:
-    MATRIX IDENTIFIER OPENBRACKET INTEGER CLOSEBRACKET OPENBRACE
+    MATRIX IDENTIFIER OPENBRACE
         {
             //add matrix to symbol table as an empty matrix
             if(!symbolTable.addMatrixItem($IDENTIFIER.text)){
@@ -78,12 +78,13 @@ matrixDeclaration:
             {
                 //only continue saving if no errors have been seen
                 if(!flag){
-                    if($csvLine.rowData.size() == Integer.parseInt($INTEGER.text)){
-                        symbolTable.addRowToMatrix($IDENTIFIER.text, $csvLine.rowData);
+                    if(symbolTable.numRowsInCurrentMatrix != -1
+                        && $csvLine.rowData.size() != symbolTable.numRowsInCurrentMatrix){
+                            printError("All rows in matrix " + $IDENTIFIER.text + " must contain < " + symbolTable.numRowsInCurrentMatrix + " > elements (found:" + $csvLine.rowData.size() + " elements)");
+                            flag = true;
                     }
                     else{
-                        printError("All rows in matrix " + $IDENTIFIER.text + " must contain < " + $INTEGER.text + " > elements (found:" + $csvLine.rowData.size() + " elements)");
-                        flag = true;
+                        symbolTable.addRowToMatrix($IDENTIFIER.text, $csvLine.rowData);
                     }
                 }
             }
@@ -95,6 +96,7 @@ matrixDeclaration:
             symbolTable.ST.remove($IDENTIFIER.text);// remove bad obj from ST
         }
         flag = false;//reset error flag after statement is fully read
+        symbolTable.numRowsInCurrentMatrix = -1;//reset the tracker for consistent number of rows in a matrix
     };
 
 /*one csvLine contains all of the information for one row in a matrix */

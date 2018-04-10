@@ -14,6 +14,7 @@ public class MatSymbolTable {
     */
     public HashMap<String, ArrayList<List<Double>>> ST;
     public HashMap<String, Double> ScalarST;
+    public int numRowsInCurrentMatrix = -1;//used for loading matrices, makes sure that the number of elements in each row is the same. set to -1 by default, gets set when a matrix is being loaded, and then reset to -1 once the matrix declaration statement is over.
 
     //constructor - init the ST
     public MatSymbolTable(){
@@ -38,9 +39,10 @@ public class MatSymbolTable {
         return false;
     }
 
-    //add rowData to the tail of the 'matrix' corresponding to the symbol, used for loading matrices from an input file
+    //add rowData to the tail of the 'matrix' corresponding to the symbol, used ONLY for loading matrices from an input file
     public void addRowToMatrix(String symbol, List<Double> rowData){
         if(ST.containsKey(symbol)){
+            if(numRowsInCurrentMatrix == -1) numRowsInCurrentMatrix = rowData.size();
             ST.get(symbol).add(new ArrayList<Double>(rowData));
         }
     }
