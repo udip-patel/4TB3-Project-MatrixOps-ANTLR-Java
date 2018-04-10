@@ -14,7 +14,6 @@ public class MatSymbolTable {
     */
     public HashMap<String, ArrayList<List<Double>>> ST;
     public HashMap<String, Double> ScalarST;
-    public int numRowsInCurrentMatrix = -1;//used for loading matrices, makes sure that the number of elements in each row is the same. set to -1 by default, gets set when a matrix is being loaded, and then reset to -1 once the matrix declaration statement is over.
 
     //constructor - init the ST
     public MatSymbolTable(){
@@ -35,12 +34,29 @@ public class MatSymbolTable {
 
 
     //add rowData to the tail of the 'matrix' corresponding to the symbol, used ONLY for loading matrices from an input file
+    //WILL NOW BE MARKED FOR DELETION, replaced by the function below
     public void addRowToMatrix(String symbol, List<Double> rowData){
         if(ST.containsKey(symbol)){
-            if(numRowsInCurrentMatrix == -1) numRowsInCurrentMatrix = rowData.size();
             ST.get(symbol).add(new ArrayList<Double>(rowData));
         }
     }
+
+    public void addMatrixToSymbol(String symbol, ArrayList<List<Double>> mat){
+        //run a for loop, put vals in a double add it to the newly improved ST
+        if(ST.containsKey(symbol)){
+            double[][] STentry = new double[mat.size()][mat.get(0).size()];
+
+            for(int i = 0; i < mat.size(); i++){
+                for(int j = 0; j < mat.get(0).size(); j++){
+                    STentry[i][j] = (double)mat.get(i).get(j);
+                }
+            }
+
+            //ST.put(symbol, newMatExpr(STentry)) -> overwrite symboltable to now use a priitive double
+
+        }
+    }
+
 
     public boolean addScalarItem(String symbol, Double scalarValue){
         if(!ScalarST.containsKey(symbol)){

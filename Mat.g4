@@ -9,6 +9,10 @@ grammar Mat;
 
 @members{
     public MatSymbolTable symbolTable = new MatSymbolTable();
+    ArrayList<List<Double>> matrixToLoad;//for each matrix declaration, will temporarily collect the information list format, and send it to the symbolTable. gets reset for each new matrix declaration
+
+
+
     //static library class with all math/algorithm based functions
     public MatEvaluator eval;
     public boolean flag = false;// error flag for reference
@@ -65,6 +69,8 @@ program:
 matrixDeclaration:
     MATRIX IDENTIFIER OPENBRACE
         {
+            matrixToLoad = new ArrayList<List<Double>>();//init matrix to load
+
             //add matrix to symbol table as an empty matrix
             if(!symbolTable.addMatrixItem($IDENTIFIER.text)){
                 //set error flag if cannot be added, then print error
@@ -78,13 +84,17 @@ matrixDeclaration:
             {
                 //only continue saving if no errors have been seen
                 if(!flag){
-                    if(symbolTable.numRowsInCurrentMatrix != -1
-                        && $csvLine.rowData.size() != symbolTable.numRowsInCurrentMatrix){
-                            printError("All rows in matrix " + $IDENTIFIER.text + " must contain < " + symbolTable.numRowsInCurrentMatrix + " > elements (found:" + $csvLine.rowData.size() + " elements)");
+                    //if this is NOT the first row to load AND the size of this row is NOT the same as the size of the first row, print err
+                    if(matrixToLoad.size() != 0
+                        && $csvLine.rowData.size() != matrixToLoad.get(0).size()){
+                            printError("All rows in matrix < " + $IDENTIFIER.text + " > must contain < " + matrixToLoad.get(0).size() + " > elements (found:" + $csvLine.rowData.size() + " elements)");
                             flag = true;
                     }
+                    //else add row into the matrixToLoad
                     else{
-                        symbolTable.addRowToMatrix($IDENTIFIER.text, $csvLine.rowData);
+
+                        symbolTable.addRowToMatrix($IDENTIFIER.text, $csvLine.rowData);//THIS LINE IS MARKED FOR DELETION
+                        matrixToLoad.add($csvLine.rowData);
                     }
                 }
             }
@@ -95,8 +105,10 @@ matrixDeclaration:
             System.out.println("Due to the error, The matrix < " + $IDENTIFIER.text + " > was not created successfully");
             symbolTable.ST.remove($IDENTIFIER.text);// remove bad obj from ST
         }
+        else{
+            symbolTable.addMatrixToSymbol($IDENTIFIER.text, matrixToLoad);
+        }
         flag = false;//reset error flag after statement is fully read
-        symbolTable.numRowsInCurrentMatrix = -1;//reset the tracker for consistent number of rows in a matrix
     };
 
 /*one csvLine contains all of the information for one row in a matrix */
