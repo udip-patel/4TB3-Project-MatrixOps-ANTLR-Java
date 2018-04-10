@@ -33,11 +33,6 @@ public class MatSymbolTable {
         else return false;
     }
 
-    //add a symbol along with its matrix
-    public boolean addMatrixItem(String symbol, ArrayList<List<Double>> matrix){
-        //..todoLater..
-        return false;
-    }
 
     //add rowData to the tail of the 'matrix' corresponding to the symbol, used ONLY for loading matrices from an input file
     public void addRowToMatrix(String symbol, List<Double> rowData){
