@@ -4,8 +4,17 @@ import java.util.*;
 import java.lang.Math.*;
 
 public class MatEvaluator{
+    public static long startTime;
+
     public MatEvaluator(){
         //empty constructor.. this class should be a static library but Java only allows nested static classes
+    }
+
+    public static void startTimer(){
+        startTime = System.nanoTime();
+    }
+    public static long stopTimer(){
+        return System.nanoTime() - startTime;
     }
 
     //simiple copy method, uses constructors to return a new MatExpressionObject

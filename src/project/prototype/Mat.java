@@ -14,7 +14,6 @@ public class Mat{
 
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         MatParser parser = new MatParser(tokens);
-
         long startTime = System.nanoTime();
         try{
             parser.program();
@@ -23,8 +22,9 @@ public class Mat{
         }
         long runTime = System.nanoTime() - startTime;
 
+        double timeInSeconds = runTime/1000000000.0;
         System.out.println("\n\n\n------PROGRAM COMPLETE------");
-        System.out.println("Runtime: " + runTime + " nanoseconds\n\n\n");
+        System.out.println("Total Runtime: " + runTime + " nanoseconds (" + timeInSeconds + " seconds)\n\n\n");
     }
 
 }
