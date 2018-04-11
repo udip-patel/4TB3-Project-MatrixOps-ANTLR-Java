@@ -5,9 +5,9 @@ import java.util.*;
 public class MatExpressionObject {
     //TYPE refers to whether this expr is a matrix (1) or a scalar value (0)
     public boolean type;
-    public Double scalarValue;
+    public double scalarValue;
     //uninitialized array, best to leave uninit. until calculations are needed
-    public ArrayList<List<Double>> matrix;
+    public double[][] matrix;
 
 
     //base constructor --> set up an expression of type matrix
@@ -15,15 +15,18 @@ public class MatExpressionObject {
         this.type = true;
     }
     //constructor used for setting up an expr that returns a scalar value
-    public MatExpressionObject(Double scalarValue){
+    public MatExpressionObject(double scalarValue){
         this.type = false;
         this.scalarValue = scalarValue;
     }
 
     //constructor used to load/copy a representation of a matrix
-    public MatExpressionObject(ArrayList<List<Double>> matrix){
+    public MatExpressionObject(double[][] matrix){
         this.type = true;
-        this.matrix = new ArrayList<List<Double>>(matrix);
+        this.matrix = new double[matrix.length][matrix[0].length];
+        for(int i = 0; i < matrix.length; i++){
+            this.matrix[i] = matrix[i].clone();
+        }
     }
 
 }

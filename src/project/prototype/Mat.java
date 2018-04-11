@@ -15,16 +15,14 @@ public class Mat{
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         MatParser parser = new MatParser(tokens);
 
-        long startTime = System.nanoTime();
         try{
             parser.program();
         } catch(Exception e){
             System.out.println("Error: " + e.getMessage());
         }
-        long runTime = System.nanoTime() - startTime;
 
         System.out.println("\n\n\n------PROGRAM COMPLETE------");
-        System.out.println("Runtime: " + runTime + " nanoseconds\n\n\n");
+        //System.out.println("Runtime: " + runTime + " nanoseconds\n\n\n");
     }
 
 }

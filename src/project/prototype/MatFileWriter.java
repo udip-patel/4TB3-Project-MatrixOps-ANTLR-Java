@@ -31,32 +31,29 @@ public class MatFileWriter{
         }
     }
 
-    public static void addRepresentationOfDouble(Double val){
-        if(val % 1 == 0 ) csvContent.append(String.valueOf(val.intValue()));
+    public static void addRepresentationOfDouble(double val){
+        if(val % 1 == 0 ) csvContent.append(String.valueOf((int)val));
         else csvContent.append(String.valueOf(val));
     }
 
 
-    public static void addMatrixToFile(String symbol, ArrayList<List<Double>> matrix){
+    public static void addMatrixToFile(String symbol, double[][] matrix){
         addSpaceForNewItem();
         csvContent.append(symbol);
         addNewLine();
 
-        String tmp;//intermediate object
-        for(List<Double> row: (ArrayList<List<Double>>)matrix){
-            for(Double elem: row){
-                //export integer or double version of value
-                addRepresentationOfDouble(elem);
+        for(int i = 0; i < matrix.length; i++){
+            for(int j = 0; j < matrix[0].length - 1; j++){
+                addRepresentationOfDouble(matrix[i][j]);
                 csvContent.append(", ");
             }
-            //remove the extra ", " at the end of the row and go to next line
-            csvContent.deleteCharAt(csvContent.length()-1);
-            csvContent.deleteCharAt(csvContent.length()-1);
+            //no trailing comma for the last element in the row
+            addRepresentationOfDouble(matrix[i][matrix[0].length-1]);
             addNewLine();
         }
     }
 
-    public static void addScalarValueToFile(String symbol, Double val){
+    public static void addScalarValueToFile(String symbol, double val){
         addSpaceForNewItem();
         csvContent.append(symbol + ",");
         addRepresentationOfDouble(val);

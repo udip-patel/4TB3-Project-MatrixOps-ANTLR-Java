@@ -4,8 +4,19 @@ import java.util.*;
 import java.lang.Math.*;
 
 public class MatEvaluator{
+    public static long startTime;//used to measure performance of functions
+
     public MatEvaluator(){
         //empty constructor.. this class should be a static library but Java only allows nested static classes
+    }
+
+    public static void startTimer(){
+        startTime = System.nanoTime();
+    }
+
+    //returns Number of nanoseconds passed since the timer was started
+    public static long stopTimer(){
+        return System.nanoTime() - startTime;
     }
 
     //simiple copy method, uses constructors to return a new MatExpressionObject
@@ -19,69 +30,54 @@ public class MatEvaluator{
         }
     }
 
-    //expects(num of rows, num of cols), returns an empty matrix with those dims
-    public static ArrayList<List<Double>> generateMatrix(int rows, int cols){
-        ArrayList<List<Double>> mat = new ArrayList<List<Double>>();
-        for(int i = 0; i < rows; i++){
-            List<Double> row = new ArrayList<Double>();
-            for(int j = 0; j < cols; j++){
-                row.add(0.0);
-            }
-            mat.add(row);
-        }
-        return mat;
-    }
 
     //transpose function, returns new MatExpressionObject with appropriate vals
     //each cell c(i, j) in the matrix now becomes c(j, i)
-    public static MatExpressionObject transpose(ArrayList<List<Double>> matObj){
-        ArrayList<List<Double>> resultMat = new ArrayList<List<Double>>();
+    public static MatExpressionObject transpose(double[][] matObj){
+        double[][] resultMat = new double[matObj[0].length][matObj.length];
 
-        //for each row in original matrix
-        for(int i = 0; i < matObj.get(0).size(); i++){
-            List<Double> transposedRow = new ArrayList<Double>();
-            //for each column in the original matrix
-            for(int j = 0; j < matObj.size(); j++){
-                transposedRow.add(matObj.get(j).get(i));
+        for(int i = 0; i < resultMat.length; i++){
+            for(int j = 0; j < resultMat[0].length; j++){
+                resultMat[i][j] = matObj[j][i];
             }
-            resultMat.add(transposedRow);
         }
         return new MatExpressionObject(resultMat);
     }
 
 
     //recursive determinant function
-    public static MatExpressionObject determinant(ArrayList<List<Double>> matObj){
-        ArrayList<List<Double>> tmp;
-        Double result = 0.0;
+    public static MatExpressionObject determinant(double[][] matObj){
+        double[][] tmp;
+        double result = 0.0;
 
-        if(matObj.size() == 1){
-            result = matObj.get(0).get(0);
+        if(matObj.length == 1){
+            result = matObj[0][0];
             return new MatExpressionObject(result);
         }
-        if(matObj.size() == 2){
-            result = (matObj.get(0).get(0)*matObj.get(1).get(1)) - (matObj.get(0).get(1)*matObj.get(1).get(0));
+        if(matObj.length == 2){
+            result = (matObj[0][0]*matObj[1][1])-(matObj[0][1]*matObj[1][0]);
             return new MatExpressionObject(result);
         }
 
         //do the recursive calculation for determinant
-        for(int i = 0; i < matObj.get(0).size(); i++){
+        for(int i = 0; i < matObj[0].length; i++){
             //initialize tmp to be a matrix with dimensions [matObj-1][matObj-1]
-            //values are all 0 initially --> might be major cause of performance issues for a deeply nested operation
-            tmp = generateMatrix(matObj.size()-1, matObj.size()-1);
+            //values are all 0 initially
+            tmp = new double[matObj.length-1][matObj.length-1];
 
-            for(int j = 1; j < matObj.size(); j++){
-                for(int k = 0; k < matObj.get(0).size(); k++){
+            for(int j = 1; j < matObj.length; j++){
+                for(int k = 0; k < matObj[0].length; k++){
                     //set new values for tmp
                     if(k < i){
-                        tmp.get(j-1).set(k, matObj.get(j).get(k));
+                        tmp[j-1][k] = matObj[j][k];
                     }
                     else if(k > i){
-                        tmp.get(j-1).set(k-1, matObj.get(j).get(k));
+                        tmp[j-1][k-1] = matObj[j][k];
                     }
+                    //if k == i, do nothing
                 }
             }
-            result += matObj.get(0).get(i)* Math.pow(-1, (double)i) * determinant(tmp).scalarValue;
+            result += matObj[0][i] * Math.pow(-1, (double)i) * determinant(tmp).scalarValue;
         }
         return new MatExpressionObject(result);
     }
@@ -94,7 +90,7 @@ public class MatEvaluator{
     */
 
     //helper function for INVERSION
-    public static void transformToUpperTriangle(ArrayList<List<Double>> matObj, int[] index){
+    public static void transformToUpperTriangle(double[][] matObj, int[] index){
         int n = index.length;
         double[] c = new double[n];
 
@@ -105,7 +101,7 @@ public class MatEvaluator{
         for(int i= 0; i < n; i++){
             double c1 = 0;
             for(int j = 0; j < n; j++){
-                double c0 = Math.abs(matObj.get(i).get(j));
+                double c0 = Math.abs(matObj[i][j]);
                 if(c0 > c1) c1 = c0;
             }
             c[i] = c1;
@@ -116,7 +112,7 @@ public class MatEvaluator{
         for(int j = 0; j < n-1; j++){
             double p1 = 0;
             for(int i = j; i < n; i++){
-                double p0 = Math.abs(matObj.get(index[i]).get(j));
+                double p0 = Math.abs(matObj[index[i]][j]);
                 p0 = p0/c[index[i]];
                 if(p0 > p1){
                     p1 = p0;
@@ -128,34 +124,32 @@ public class MatEvaluator{
             index[j] = index[k];
             index[k] = tmp;
             for(int i = j+1; i < n; i++){
-                Double pj = matObj.get(index[i]).get(j)/ matObj.get(index[j]).get(j);
+                double pj = matObj[index[i]][j] / matObj[index[j]][j];
 
                 //record pivoting ratio below the diagonal
-                matObj.get(index[i]).set(j, pj);
+                matObj[index[i]][j] = pj;
 
                 //modify other elements accordingly
                 for(int l = j+1; l < n; l++){
-                    Double cellValue = matObj.get(index[i]).get(l);
-                    matObj.get(index[i]).set(l, (cellValue - (pj*matObj.get(index[j]).get(l))));
+                    Double cellValue = matObj[index[i]][l];
+                    matObj[index[i]][l] = cellValue - pj*matObj[index[j]][l];
                 }
-
             }
         }
-
     }
 
 
 
-    public static MatExpressionObject invertMat(ArrayList<List<Double>> matObj){
-        int n = matObj.size();
-        ArrayList<List<Double>> auxMat = generateMatrix(n, n);
-        ArrayList<List<Double>> invMat = generateMatrix(n, n);
+    public static MatExpressionObject invertMat(double[][] matObj){
+        int n = matObj.length;
+        double[][] auxMat = new double[n][n];
+        double[][] invMat = new double[n][n];
         int [] index = new int[n];
-        Double cellValue;//tmp variable
+        double cellValue;//tmp variable
 
         //set auxillary mat to be an Identity matrix
         for(int i = 0; i < n; i++){
-            auxMat.get(i).set(i, 1.0);
+            auxMat[i][i] = 1.0;
         }
 
         transformToUpperTriangle(matObj, index);
@@ -163,25 +157,23 @@ public class MatEvaluator{
         for(int i = 0; i < n-1; i++){
             for(int j = i+1; j < n; j++){
                 for(int k = 0; k < n; k++){
-                    cellValue = auxMat.get(index[j]).get(k);
-                    auxMat.get(index[j]).set(k, cellValue - (matObj.get(index[j]).get(i)*auxMat.get(index[i]).get(k)));
-
+                    cellValue = auxMat[index[j]][k];
+                    auxMat[index[j]][k] = cellValue - (matObj[index[j]][i] * auxMat[index[i]][k]);
                 }
             }
         }
 
         for(int i = 0; i < n; i++){
-            invMat.get(n-1).set(i, auxMat.get(index[n-1]).get(i) / matObj.get(index[n-1]).get(n-1));
+            invMat[n-1][i] = auxMat[index[n-1]][i] / matObj[index[n-1]][n-1];
 
             for(int j = n-2; j>= 0; j--){
-                invMat.get(j).set(i, auxMat.get(index[j]).get(i));
+                invMat[j][i] = auxMat[index[j]][i];
                 for(int k = j+1; k < n; k++){
-                    cellValue = invMat.get(j).get(i);
-                    invMat.get(j).set(i, cellValue -  matObj.get(index[j]).get(k)*invMat.get(k).get(i));
+                    cellValue = invMat[j][i];
+                    invMat[j][i] = cellValue - matObj[index[j]][k]*invMat[k][i];
                 }
-
-                cellValue = invMat.get(j).get(i);
-                invMat.get(j).set(i, cellValue / matObj.get(index[j]).get(j));
+                cellValue = invMat[j][i];
+                invMat[j][i] = cellValue / matObj[index[j]][j];
             }
         }
         //return the inverted matrix
@@ -201,70 +193,59 @@ public class MatEvaluator{
 
 
     //MATRIX MULTIPLICATION function
-    public static MatExpressionObject multiplyMatrices(ArrayList<List<Double>> f1, ArrayList<List<Double>> f2){
+    public static MatExpressionObject multiplyMatrices(double[][] f1, double[][] f2){
 
-        Double tmp = 0.0;//used to store intermediate results
-        ArrayList<List<Double>> f0 = new ArrayList<List<Double>>();
-        for(int i=0; i < f1.size(); i++){
-            List<Double> resultRow = new ArrayList<Double>();
-            for(int j = 0; j < f2.get(0).size(); j++){
+        double tmp = 0.0;//used to store intermediate results
+        double[][] f0 = new double[f1.length][f2[0].length];
+        for(int i=0; i < f1.length ; i++){
+            for(int j = 0; j < f2[0].length; j++){
                 //each cell in the resulting Matrix = dot product of a single row from F1 and a single column from F2
-                tmp = 0.0;
-                for(int k = 0; k < f1.get(0).size(); k++){
-                    tmp += f1.get(i).get(k) * f2.get(k).get(j);
+                for(int k = 0; k < f1[0].length; k++){
+                    f0[i][j] += f1[i][k] * f2[k][j];
                 }
-                resultRow.add(tmp);
             }
-            f0.add(resultRow);
         }
         return new MatExpressionObject(f0);
     }
 
 
 
-    public static MatExpressionObject addMat(ArrayList<List<Double>> f1, ArrayList<List<Double>> f2){
-        ArrayList<List<Double>> f0 = new ArrayList<List<Double>>();
-        for(int i = 0; i < f1.size(); i++){
-
-            List<Double> rowOfSummedResults = new ArrayList<Double>();
-            for(int j = 0; j < f1.get(0).size(); j++){
-                rowOfSummedResults.add(f1.get(i).get(j) + f2.get(i).get(j));
+    public static MatExpressionObject addMat(double[][] f1, double[][] f2){
+        double[][] f0 = new double[f1.length][f1[0].length];
+        for(int i = 0; i < f1.length; i++){
+            for(int j = 0; j < f1[0].length; j++){
+                f0[i][j] = f1[i][j] + f2[i][j];
             }
-            f0.add(rowOfSummedResults);
         }
         return new MatExpressionObject(f0);
     }
 
-    public static MatExpressionObject subtractMat(ArrayList<List<Double>> f1, ArrayList<List<Double>> f2){
-        ArrayList<List<Double>> f0 = new ArrayList<List<Double>>();
-        for(int i = 0; i < f1.size(); i++){
-            List<Double> rowOfDifferences = new ArrayList<Double>();
-            for(int j = 0; j < f1.get(0).size(); j++){
-                rowOfDifferences.add(f1.get(i).get(j) - f2.get(i).get(j));
+    public static MatExpressionObject subtractMat(double[][] f1, double[][] f2){
+        double[][] f0 = new double[f1.length][f1[0].length];
+        for(int i = 0; i < f1.length; i++){
+            for(int j = 0; j < f1[0].length; j++){
+                f0[i][j] = f1[i][j] - f2[i][j];
             }
-            f0.add(rowOfDifferences);
         }
         return new MatExpressionObject(f0);
     }
 
 
     /*element-wise add/subtract/mult/divide functions */
-    public static MatExpressionObject elemWiseOperation(ArrayList<List<Double>> f1, Double f2, char op){
-        ArrayList<List<Double>> f0 = new ArrayList<List<Double>>();
-        for(int i = 0; i < f1.size(); i++){
-            List<Double> newRow = new ArrayList<Double>();
-            for(int j = 0; j < f1.get(0).size(); j++){
+    public static MatExpressionObject elemWiseOperation(double[][] f1, double f2, char op){
+        double[][] f0 = new double[f1.length][f1[0].length];
+        for(int i = 0; i < f1.length; i++){
+            for(int j = 0; j < f1[0].length; j++){
                 //this switch statement may add to the performance cost, but adding 4 separate functions with almost the same code seemed like too much code repetition
                 switch(op){
-                    case '+':newRow.add(f1.get(i).get(j)+f2); break;
-                    case '-':newRow.add(f1.get(i).get(j)-f2); break;
-                    case '*':newRow.add(f1.get(i).get(j)*f2); break;
-                    case '/':newRow.add(f1.get(i).get(j)/f2); break;
-                    case '^':newRow.add(Math.pow(f1.get(i).get(j), f2)); break;
+                    case '+':f0[i][j] = f1[i][j] + f2; break;
+                    case '-':f0[i][j] = f1[i][j] - f2; break;
+                    case '*':f0[i][j] = f1[i][j] * f2; break;
+                    case '/':f0[i][j] = f1[i][j] / f2; break;
+                    case '^':f0[i][j] = Math.pow(f1[i][j], f2); break;
                     default: break;
                 }
             }
-            f0.add(newRow);
         }
         return new MatExpressionObject(f0);
     }

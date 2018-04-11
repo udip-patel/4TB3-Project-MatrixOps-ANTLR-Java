@@ -17,6 +17,7 @@ grammar Mat;
     public MatEvaluator eval;
     public boolean flag = false;// error flag for reference
     public int numOpenBrackets = 0;// the number of open brackets in an equation, incremented when '(' is seen in an expression, decremented when ')' is recognized. if it is not 0 at the end of the expression, throw error
+    public int numOperationStmts = 0;//used to help print the time taken for each operation
 
 
     String operationStack = "";//stores the set of current operations to perform
@@ -92,8 +93,6 @@ matrixDeclaration:
                     }
                     //else add row into the matrixToLoad
                     else{
-
-                        symbolTable.addRowToMatrix($IDENTIFIER.text, $csvLine.rowData);//THIS LINE IS MARKED FOR DELETION
                         matrixToLoad.add($csvLine.rowData);
                     }
                 }
@@ -142,6 +141,7 @@ returns [Double value]:
 
 /*like an assignment statement in most programming languages */
 operationStatement:
+    { eval.startTimer(); }
     IDENTIFIER EQUALS expression BREAK
     {
         if(numOpenBrackets != 0){
@@ -181,6 +181,11 @@ operationStatement:
         }
         flag = false;//reset error flag at the end of the statement
         numOpenBrackets = 0;// reset numOpenBrackets for next expresson
+        numOperationStmts++;//increment the number of op statements recorded
+
+        long runTime = eval.stopTimer();
+
+        System.out.println("Operation Statement #" + numOperationStmts + " runtime:\t" + runTime + " nanoseconds");
     }
 ;
 
@@ -223,8 +228,8 @@ returns [MatExpressionObject result]:
     {
         if(flag) $result = new MatExpressionObject();//return empty obj
         else{
-            ArrayList<List<Double>> F1 = $f1.result.matrix;
-            Double F2 = $f2.result.scalarValue;
+            double[][] F1 = $f1.result.matrix;
+            double F2 = $f2.result.scalarValue;
 
             //get currentSymbol from OperationStack
             char currentOpSymbol = operationStack.charAt(0);
@@ -273,8 +278,8 @@ returns [MatExpressionObject result]:
     {
         if(flag) $result = new MatExpressionObject();//return empty obj
         else{
-            ArrayList<List<Double>> F1 = $f1.result.matrix;
-            ArrayList<List<Double>> F2 = $f2.result.matrix;
+            double[][] F1 = $f1.result.matrix;
+            double[][] F2 = $f2.result.matrix;
 
             //schedule the first task on operationStack to be executed
             char currentOp = operationStack.charAt(0);
@@ -283,7 +288,7 @@ returns [MatExpressionObject result]:
             if(currentOp == 'M'){
                 //multiply matrices F1 and F2, but before that..
                 //ensure #columns in F1 = #rows in F2. if not, throw error
-                if(F1.size() != F2.get(0).size()){
+                if(F1.length != F2[0].length){
                     flag = true;
                     printError("Cannot multiply matrices where the number of columns in the first matrix is not the same as the number of rows in the second matrix");
                     $result = new MatExpressionObject();//return empty obj
@@ -293,7 +298,7 @@ returns [MatExpressionObject result]:
             else{
                 //the addition and subtraction functions have a precondition
                 //both F1 and F2 must be the same dimensions
-                if(F1.size() != F2.size() || F1.get(0).size() != F2.get(0).size()){
+                if(F1.length != F2.length || F1[0].length != F2[0].length){
                     //print error if preconditions are not met
                     flag = true;
                     printError("Cannot add/subtract matrices that have different dimensions");
@@ -339,7 +344,7 @@ returns [MatExpressionObject result]:
                     if(op=='T')$result = eval.transpose($factor.result.matrix);
                     else{
                         //both determinant and inversion have a precondition. The factor must be a SQUARE MATRIX
-                        if($factor.result.matrix.size() != $factor.result.matrix.get(0).size()){
+                        if($factor.result.matrix.length != $factor.result.matrix[0].length){
                             flag = true;
                             printError("Cannot use the transpose/determinant/inverse functions on a matrix that is NOT SQUARE");
                             $result = new MatExpressionObject();
@@ -376,8 +381,8 @@ returns [MatExpressionObject result]:
                 //if the identifier is a scalar that was defined by a previous operationStatement, load from the separate scalarST hashmap
                 else if(symbolTable.ScalarST.containsKey($IDENTIFIER.text)){
                     $result = new MatExpressionObject(
-                        symbolTable.ScalarST.get($IDENTIFIER.text)
-                    );
+                        (double)symbolTable.ScalarST.get($IDENTIFIER.text)
+                    );//cast the Double object to a double primitive when loading into MatExpressionObject
                 }
                 //identifier not found
                 else{
