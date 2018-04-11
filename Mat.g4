@@ -141,7 +141,6 @@ returns [Double value]:
 
 /*like an assignment statement in most programming languages */
 operationStatement:
-    { eval.startTimer(); }
     IDENTIFIER EQUALS expression BREAK
     {
         if(numOpenBrackets != 0){
@@ -182,10 +181,8 @@ operationStatement:
         flag = false;//reset error flag at the end of the statement
         numOpenBrackets = 0;// reset numOpenBrackets for next expresson
         numOperationStmts++;//increment the number of op statements recorded
-
-        long runTime = eval.stopTimer();
-
-        System.out.println("Operation Statement #" + numOperationStmts + " runtime:\t" + runTime + " nanoseconds");
+        System.out.println("Total Runtime for Operation Statement #" + numOperationStmts + ":\t" + eval.totalElapsedTime);
+        eval.totalElapsedTime = 0;//reset time for each op statement
     }
 ;
 

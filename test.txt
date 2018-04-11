@@ -44,6 +44,13 @@ matrix v1 {
     {9, 2, 3, 1}
 };
 
-a = mult(inverse(inverse(elemWiseMult(a, 3))), b);
-g = inverse(transpose(transpose(v1)));
-print a, g;
+a = mult(t1, t2);
+b = mult(t2, t1);
+c = copy(4);
+c = mult(t1, t2);
+c = copy(5);
+print a, b, c;
+
+export a, b, c >> specific;
+print *;
+export * >> all;

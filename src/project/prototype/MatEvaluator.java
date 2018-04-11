@@ -4,19 +4,20 @@ import java.util.*;
 import java.lang.Math.*;
 
 public class MatEvaluator{
-    public static long startTime;//used to measure performance of functions
+    public static long startTimeOfInstance;//used to measure performance of functions, one by one as they are executed
+    public static long totalElapsedTime = 0;//stores the sum of the runtimes of each instance that is run
 
     public MatEvaluator(){
-        //empty constructor.. this class should be a static library but Java only allows nested static classes
+        //empty constructor
     }
 
     public static void startTimer(){
-        startTime = System.nanoTime();
+        startTimeOfInstance = System.nanoTime();
     }
 
-    //returns Number of nanoseconds passed since the timer was started
-    public static long stopTimer(){
-        return System.nanoTime() - startTime;
+    //add the time pased from when the timer was started to totalElapsedTime
+    public static void stopTimer(){
+        totalElapsedTime +=  System.nanoTime() - startTimeOfInstance;
     }
 
     //simiple copy method, uses constructors to return a new MatExpressionObject
@@ -34,6 +35,7 @@ public class MatEvaluator{
     //transpose function, returns new MatExpressionObject with appropriate vals
     //each cell c(i, j) in the matrix now becomes c(j, i)
     public static MatExpressionObject transpose(double[][] matObj){
+
         double[][] resultMat = new double[matObj[0].length][matObj.length];
 
         for(int i = 0; i < resultMat.length; i++){
