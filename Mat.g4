@@ -17,7 +17,6 @@ grammar Mat;
     public MatEvaluator eval;
     public boolean flag = false;// error flag for reference
     public int numOpenBrackets = 0;// the number of open brackets in an equation, incremented when '(' is seen in an expression, decremented when ')' is recognized. if it is not 0 at the end of the expression, throw error
-    public int numOperationStmts = 0;//used to help print the time taken for each operation
 
 
     String operationStack = "";//stores the set of current operations to perform
@@ -180,9 +179,6 @@ operationStatement:
         }
         flag = false;//reset error flag at the end of the statement
         numOpenBrackets = 0;// reset numOpenBrackets for next expresson
-        numOperationStmts++;//increment the number of op statements recorded
-        System.out.println("Total Runtime for Operation Statement #" + numOperationStmts + ":\t" + eval.totalElapsedTime);
-        eval.totalElapsedTime = 0;//reset time for each op statement
     }
 ;
 
