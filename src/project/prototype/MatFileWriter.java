@@ -33,7 +33,7 @@ public class MatFileWriter{
 
     public static void addRepresentationOfDouble(Double val){
         if(val % 1 == 0 ) csvContent.append(String.valueOf(val.intValue()));
-        else csvContent.append(String.valueOf(val));
+        else csvContent.append(String.valueOf(Math.round(val*100.0)/100.0));
     }
 
 

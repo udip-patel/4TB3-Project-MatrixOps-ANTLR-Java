@@ -271,7 +271,7 @@ returns [MatExpressionObject result]:
             if(currentOp == 'M'){
                 //multiply matrices F1 and F2, but before that..
                 //ensure #columns in F1 = #rows in F2. if not, throw error
-                if(F1.size() != F2.get(0).size()){
+                if(F1.get(0).size() != F2.size()){
                     flag = true;
                     printError("Cannot multiply matrices where the number of columns in the first matrix is not the same as the number of rows in the second matrix");
                     $result = new MatExpressionObject();//return empty obj

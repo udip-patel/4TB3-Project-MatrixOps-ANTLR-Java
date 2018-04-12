@@ -70,7 +70,7 @@ public class MatSymbolTable {
         System.out.println("\n*****Showing Specific Variables*****\n");
         for(String symbol: symbols){
             if(ScalarST.containsKey(symbol)){
-                System.out.println("\nVariable Name: " + symbol + " = " + ScalarST.get(symbol));
+                System.out.println("\nVariable Name: " + symbol + " = " + Math.round(ScalarST.get(symbol)*100.0)/100.0);
             }
             if(ST.containsKey(symbol)){
                 System.out.println("\nMatrix Name: " + symbol);
@@ -101,7 +101,7 @@ public class MatSymbolTable {
         System.out.println("\nScalar Values:");
         System.out.println("---------------------------");
         for(Map.Entry<String, Double> symbol:ScalarST.entrySet()){
-            System.out.println("\nVariable Name: " + symbol.getKey() + " = " + symbol.getValue());
+            System.out.println("\nVariable Name: " + symbol.getKey() + " = " + Math.round(symbol.getValue()*100.0)/100.0);
         }
     }
 
