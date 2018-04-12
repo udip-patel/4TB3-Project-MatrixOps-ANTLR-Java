@@ -2,14 +2,14 @@ Author: Udip Patel
 Final Project - Context-Free Language System for Matrix Operations
 For Class: CS4TB3 (Taught By Prof. Eden Burton)
 
-LIST-BASED IMPLEMENTATION - old, slow version
+***LIST-BASED IMPLEMENTATION - old, slow version***
 
 System Requirements:
     Operating System: Unix/Linux distribution that can run a .sh script file
     Java: version 1.7, OpenJDK version 1.7
 
 System Description:
-    This is a recognizer program for a custom-made language called MAT, which allows the user to define matrices and associate them with identifiers, perform basic matrix operations by referencing the identifiers defined, and output the results to the command line interface (CLI) or export them to a csv file with a name of their choosing. Formal definition of MAT is included in this document.
+    This is a recognizer program for a custom-made language called MAT, which allows the user to define matrices and associate them with identifiers, perform basic matrix operations by referencing the identifiers defined, and output the results to the command line interface (CLI) or export them to a csv file with a name of their choosing. A formal definition of MAT is included in this document.
 
 To Build the System from the base folder:
     execute the script "build.sh" from the command line
@@ -19,9 +19,10 @@ To Build the System from the base folder:
     This will add a file called "Mat.jar" to the base folder. Building process is then complete.
 
 To use the System after it is built:
-    The parser expects an input text file which contains all the instructions to execute. instructions for the accepted language (called MAT) are broken down into three major categories, matrix declarations, operation statements, and output statements. A file called "sampleInput.txt" is included in the base folder, and contains a template of what a valid input file looks like. A full formal definition of the language is also included below.
+    The parser expects an input text file which contains all the instructions to execute. instructions for the accepted language (MAT) are broken down into three major categories, matrix declarations, operation statements, and output statements. A file called "sampleInput.txt" is included in the base folder, and contains a template of what a valid input file looks like. A full formal definition of the language is also included below.
 
-    To run the program, simply put the desired input file in the base project folder, just like "sampleInput.txt", and run the command:
+    To run the program, simply put the desired input file in the base project folder
+    then and run the command:
         java -jar Mat.jar < yourInputFile.txt
 
     where yourInputFile is the name of the desired input file.
@@ -30,7 +31,8 @@ Formal Language Definition:
     Let MAT = (T, N, P, S)
 
     where T is the Set of Terminals:
-        [ ’matrix’, ’elemWiseAdd’, ’elemWiseSub’, ’elemWiseMult’, ’elemWiseDiv’, ’elemWisePow’, ’add’, ’sub’, ’mult’, ’copy’, ’transpose’, ’determinant’, ’inverse’, ’print’, ’export’,
+        [ ’matrix’, ’elemWiseAdd’, ’elemWiseSub’, ’elemWiseMult’, ’elemWiseDiv’, ’elemWisePow’,
+        ’add’, ’sub’, ’mult’, ’copy’, ’transpose’, ’determinant’, ’inverse’, ’print’, ’export’,
         ’>>’, ’-’, ’(’, ’)’, ’{’, ’}’, ’=’, ’;’, ALL, IDENTIFIER, COMMA, INTEGER, FLOAT, EOF
         ]
         where
@@ -41,7 +43,9 @@ Formal Language Definition:
         FLOAT := [0-9]*’.’[0-9]+
 
     where N is the set of Non-Terminals:
-        [ program, matrixDeclaration, operationStatement, outputStatement, csvLine, number, operationStatement, expression, elementWiseOperation, operationOnOneMat, operationOnTwoMats, factor ]
+        [ program, matrixDeclaration, operationStatement, outputStatement, csvLine, number,
+        operationStatement, expression, elementWiseOperation, operationOnOneMat,
+        operationOnTwoMats, factor ]
 
     where P is the set of possible productions:
         [ program := matrixDeclaration* operationStatement* outputStatement* EOF
