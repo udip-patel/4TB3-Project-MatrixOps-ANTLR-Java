@@ -20,7 +20,7 @@ public class MatEvaluator{
     //simiple copy method, uses constructors to return a new MatExpressionObject
     public static MatExpressionObject copyObject(MatExpressionObject exprObj){
         //if the object is a scalar value
-        if(!exprObj.type){
+        if(!exprObj.isMatrix){
             return new MatExpressionObject(exprObj.scalarValue);
         }
         else{

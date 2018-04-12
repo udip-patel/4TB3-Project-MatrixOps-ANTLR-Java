@@ -140,7 +140,7 @@ operationStatement:
         //if no flags, save the value of the expression to IDENTIFIER
         if(!flag){
             //RESULT IS A SCALAR
-            if(!$expression.result.type){
+            if(!$expression.result.isMatrix){
                 //if reference used to previously store a matrix type
                 if(symbolTable.ST.containsKey($IDENTIFIER.text)){
                     //remove the symbol from ST and put a new one in ScalarST
@@ -195,13 +195,13 @@ returns [MatExpressionObject result]:
     OPENBRACKET
         f1=factor {
             //SIMIPLE ERROR-CHECKS BEFORE MAIN CHUNK OF CODE
-            if(!$factor.result.type){//if 1st factor is a scalar, print error
+            if(!$factor.result.isMatrix){//if 1st factor is a scalar, print error
                 flag = true;
                 printError("First factor of ElementWiseAdd/Subtract/Mult/Divide must be a matrix, not a scalar");
             }
         } COMMA f2=factor {
             if(!flag){
-                if($factor.result.type){//if 2nd factor is a matrix, print error
+                if($factor.result.isMatrix){//if 2nd factor is a matrix, print error
                     flag = true;
                     printError("Second factor of ElementWiseAdd/Subtract/Mult/Divide must be a scalar, not a matrix");
                 }
@@ -245,13 +245,13 @@ returns [MatExpressionObject result]:
     ) OPENBRACKET
         f1=factor {
             //again, simple error checks
-            if(!$factor.result.type){
+            if(!$factor.result.isMatrix){
                 flag = true;
                 printError("Cannot use mult/add/subtract on a scalar number");
             }
         } COMMA f2=factor {
             if(!flag){
-                if(!$factor.result.type){
+                if(!$factor.result.isMatrix){
                     flag = true;
                     printError("Cannot use mult/add/subtract on a scalar number");
                 }
@@ -317,7 +317,7 @@ returns [MatExpressionObject result]:
             //every other function needs a matrix, so separated from copy
             else{
                 //if factor is not a matrix, throw error stmt
-                if(!$factor.result.type){
+                if(!$factor.result.isMatrix){
                     flag = true;
                     printError("Cannot use the transpose/determinant/inverse functions on a Scalar number");
                     $result = new MatExpressionObject();//return empty obj
