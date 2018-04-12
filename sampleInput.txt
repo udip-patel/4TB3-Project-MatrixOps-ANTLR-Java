@@ -24,7 +24,7 @@ matrix v1 {
     {9, 2, 3, 1}
 };
 
-a = elemWiseAdd(elementWisePow(identityMat, 2), 1);
+a = elemWisePow(elemWiseAdd(identityMat, 1), 2);
 product = mult(t1, t2);
 det = determinant(inverse(inverse(v1)));
 
