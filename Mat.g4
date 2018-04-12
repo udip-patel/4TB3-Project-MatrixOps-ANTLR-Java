@@ -486,27 +486,27 @@ outputStatement:
 
 /* LEXER */
 MATRIX:         'matrix';
-ELEMADD:        'elemwiseadd'|'elemWiseAdd';
-ELEMSUB:        'elemwisesub'|'elemWiseSub';
-ELEMMULT:        'elemwisemult'|'elemWiseMult';
-ELEMDIV:        'elemwisediv'|'elemWiseDiv';
-ELEMPOW:        'elemwisepow'|'elemWisePow';
-ADD:            'add'|'Add';
-SUBTRACT:       'sub'|'Sub';
-MULTIPLY:        'mult'|'Mult';
+ELEMADD:        'elemWiseAdd';
+ELEMSUB:        'elemWiseSub';
+ELEMMULT:       'elemWiseMult';
+ELEMDIV:        'elemWiseDiv';
+ELEMPOW:        'elemWisePow';
+ADD:            'add';
+SUBTRACT:       'sub';
+MULTIPLY:       'mult';
 COPY:           'copy';
 TRANSPOSE:      'transpose';
-DETERMINANT:    'determinant'|'Determinant';
+DETERMINANT:    'determinant';
 INVERSE:        'inverse';
-PRINT:          'print'|'Print';
-EXPORT:         'export'|'export';
+PRINT:          'print';
+EXPORT:         'export';
 ALL:            '*';
 TO:             '>>';
 /*all keywords go before IDENTIFIER to ensure they cannot be used as such */
 IDENTIFIER:     [A-Za-z_]+[0-9]*;//numbers allowed in identifier, but 1 char req
 MINUS:          '-';
 INTEGER:        [0-9]+;
-FLOAT:          [0-9]+'.'[0-9]+;
+FLOAT:          [0-9]*'.'[0-9]+;
 
 OPENBRACKET:    '(';
 CLOSEBRACKET:   ')';
