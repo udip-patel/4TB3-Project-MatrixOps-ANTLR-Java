@@ -19,10 +19,11 @@ To Build the System from the base folder:
     This will add a file called "Mat.jar" to the base folder. Building process is then complete.
 
 To use the System after it is built:
-    The parser expects an input text file which contains all the instructions to execute. instructions for the accepted language (MAT) are broken down into three major categories, matrix declarations, operation statements, and output statements. A file called "sampleInput.txt" is included in the base folder, and contains a template of what a valid input file looks like. A full formal definition of the language is also included below.
+    The parser expects an input text file which contains all the instructions to execute.
+    Instructions for the accepted language (MAT) are broken down into three major categories, matrix declarations, operation statements, and output statements. A file called "sampleInput.txt" is included in the base folder, and contains a template of what a valid input file looks like. A full formal definition of the language is also included below.
 
     To run the program, simply put the desired input file in the base project folder
-    then and run the command:
+    and then run the command:
         java -jar Mat.jar < yourInputFile.txt
 
     where yourInputFile is the name of the desired input file.
@@ -65,4 +66,5 @@ Formal Language Definition:
             (’print’ | ’export’) (IDENTIFIER (COMMA IDENTIFIER)* | ’*’)
             (’>>’ IDENTIFIER)? ’;’
         ]
+
     and where S is the start state, this shall be the first character of any given input file, the parser will then execute the instructions by reading characters from the text continously until the EOF.
