@@ -1,6 +1,7 @@
 package project.prototype;
 
 import java.util.*;
+import java.lang.Math.*;
 
 public class MatSymbolTable {
     /*
@@ -79,7 +80,7 @@ public class MatSymbolTable {
         double[][] matToPrint;
         for(String symbol: symbols){
             if(ScalarST.containsKey(symbol)){
-                System.out.println("\nVariable Name: " + symbol + " = " + ScalarST.get(symbol));
+                System.out.println("\nVariable Name: " + symbol + " = " + Math.round(ScalarST.get(symbol)*100.0)/100.0 );
             }
             if(ST.containsKey(symbol)){
                 System.out.println("\nMatrix Name: " + symbol);
@@ -87,9 +88,9 @@ public class MatSymbolTable {
                 for(int i = 0; i < matToPrint.length; i++){
                     System.out.print("\t\t[ ");//tab for each row
                     for(int j = 0; j < matToPrint[0].length - 1; j++){
-                        System.out.print(matToPrint[i][j] + ", ");
+                        System.out.print(Math.round(matToPrint[i][j]*100.0)/100.0 + ", ");
                     }
-                    System.out.print(matToPrint[i][matToPrint[0].length-1]
+                    System.out.print(Math.round(matToPrint[i][matToPrint[0].length-1]*100.0)/100.0
                      + " ]\n");
                 }
                 System.out.print("\n");
@@ -112,9 +113,9 @@ public class MatSymbolTable {
             for(int i = 0; i < matToPrint.length; i++){
                 System.out.print("\t\t[ ");//tab for each row
                 for(int j = 0; j < matToPrint[0].length - 1; j++){
-                    System.out.print(matToPrint[i][j] + ", ");
+                    System.out.print(Math.round(matToPrint[i][j]*100.0)/100.0 + ", ");
                 }
-                System.out.print(matToPrint[i][matToPrint[0].length-1]
+                System.out.print(Math.round(matToPrint[i][matToPrint[0].length-1]*100.0)/100.0
                  + " ]\n");
             }
             System.out.print("\n");
@@ -125,7 +126,7 @@ public class MatSymbolTable {
         System.out.println("\nScalar Values:");
         System.out.println("---------------------------");
         for(Map.Entry<String, Double> symbol:ScalarST.entrySet()){
-            System.out.println("\nVariable Name: " + symbol.getKey() + " = " + symbol.getValue());
+            System.out.println("\nVariable Name: " + symbol.getKey() + " = " + Math.round(symbol.getValue()*100.0)/100.0);
         }
     }
 
